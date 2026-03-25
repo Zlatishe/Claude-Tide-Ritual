@@ -5,9 +5,10 @@ import { motion } from 'framer-motion';
 interface SignInScreenProps {
   onSignIn: () => void;
   isLoading: boolean;
+  privacyText?: string;
 }
 
-export function SignInScreen({ onSignIn, isLoading }: SignInScreenProps) {
+export function SignInScreen({ onSignIn, isLoading, privacyText }: SignInScreenProps) {
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center px-6"
@@ -44,7 +45,7 @@ export function SignInScreen({ onSignIn, isLoading }: SignInScreenProps) {
         </h1>
 
         <p
-          className="font-normal mb-10"
+          className="font-normal mb-15"
           style={{ color: '#313E88', opacity: 0.5, fontSize: 'clamp(16px, 2vw, 18px)' }}
         >
           A ritual for letting go
@@ -65,10 +66,10 @@ export function SignInScreen({ onSignIn, isLoading }: SignInScreenProps) {
         </motion.button>
 
         <p
-          className="mt-6 text-xs font-light"
-          style={{ color: '#313E88', opacity: 0.35 }}
+          className="mt-6 font-light"
+          style={{ color: '#656980', fontSize: 14 }}
         >
-          Your thoughts are private and only visible to you
+          {privacyText || 'Your thoughts are private and only visible to you'}
         </p>
       </motion.div>
     </div>

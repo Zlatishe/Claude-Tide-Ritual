@@ -54,7 +54,7 @@ export function Toast({ message, onDismiss }: ToastProps) {
             </div>
             <button
               onClick={onDismiss}
-              className="flex-shrink-0 mt-0.5 cursor-pointer"
+              className="flex-shrink-0 w-11 h-11 -mr-2 flex items-center justify-center rounded-full cursor-pointer"
               style={{ color: '#313E88', opacity: 0.4 }}
               aria-label="Dismiss"
             >

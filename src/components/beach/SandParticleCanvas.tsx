@@ -35,7 +35,7 @@ export function SandParticleCanvas() {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
 
-    particlesRef.current = createParticles(width, height);
+    particlesRef.current = createParticles(width, height, dpr);
   }, []);
 
   useEffect(() => {

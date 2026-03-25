@@ -38,7 +38,7 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
           >
             {/* Close button — top-right, consistent */}
             <button
-              className="absolute top-5 right-5 md:top-8 md:right-8 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer z-10"
+              className="absolute top-4 right-4 md:top-7 md:right-7 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer z-10"
               style={{ backgroundColor: 'rgba(201,209,255,0.15)', color: '#C9D1FF' }}
               onClick={onClose}
               aria-label="Close"

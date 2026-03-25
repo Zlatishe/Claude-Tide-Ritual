@@ -26,7 +26,7 @@ export function useInscriptionSync(userId: string | null) {
     async function hydrate() {
       try {
         const { data: inscriptions } = await supabase
-          .from('active_inscriptions')
+          .from('shell_inscriptions')
           .select('*')
           .eq('user_id', userId);
 
@@ -53,7 +53,7 @@ export function useInscriptionSync(userId: string | null) {
     async (text: string, shellVariant: number) => {
       if (!userId) return;
       try {
-        await supabase.from('active_inscriptions').insert({
+        await supabase.from('shell_inscriptions').insert({
           user_id: userId,
           text_content: text,
           shell_variant: shellVariant,
@@ -70,7 +70,7 @@ export function useInscriptionSync(userId: string | null) {
     if (!userId) return;
     try {
       await supabase
-        .from('active_inscriptions')
+        .from('shell_inscriptions')
         .delete()
         .eq('user_id', userId);
     } catch (error) {

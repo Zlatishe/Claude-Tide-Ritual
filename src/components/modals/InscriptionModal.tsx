@@ -71,7 +71,7 @@ export function InscriptionModal({
           >
             {/* Close button — top-right, consistent */}
             <button
-              className="absolute top-5 right-5 md:top-8 md:right-8 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer z-10"
+              className="absolute top-4 right-4 md:top-7 md:right-7 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer z-10"
               style={{
                 backgroundColor: 'rgba(49,62,136,0.1)',
                 color: '#313E88',
@@ -147,7 +147,7 @@ export function InscriptionModal({
               {/* Inscribe button */}
               <div className="flex justify-center mt-4">
                 <motion.button
-                  className="px-6 py-2.5 rounded-full font-semibold text-sm cursor-pointer"
+                  className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer min-h-[44px]"
                   style={{
                     backgroundColor: text.trim().length > 0 ? '#E49C75' : 'rgba(228,156,117,0.4)',
                     color: text.trim().length > 0 ? '#292E64' : 'rgba(41,46,100,0.5)',

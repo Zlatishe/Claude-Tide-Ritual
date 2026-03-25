@@ -24,30 +24,48 @@ const DAMPING = 0.82; // Velocity friction per frame (lower = more friction)
 const BURST_FORCE = 12; // One-time impulse strength for landing
 const BURST_RADIUS = 140; // How far the burst reaches (px)
 
-// --- Visual constants (matched to the original CSS sand-texture) ---
-const GRID_SPACING = 16; // Pixels between dots — matches CSS background-size
+// --- Visual constants — DPR-aware for consistent look across devices ---
 const GRID_JITTER = 0; // No jitter — clean grid like the original
-const DOT_RADIUS = 0.9; // Matches CSS radial-gradient 0.9px
-const DOT_COLOR = 'rgba(228, 156, 117, 0.65)'; // #E49C75 slightly darker for visibility
 const MAX_PARTICLES = 15000; // Safety cap — only triggers on 4K+ viewports
+
+interface VisualConfig {
+  spacing: number;
+  dotRadius: number;
+  dotColor: string;
+}
+
+function getVisualConfig(dpr: number): VisualConfig {
+  if (dpr > 1.5) {
+    // High-DPR (mobile Retina) — subtler, original-feel values
+    return { spacing: 16, dotRadius: 0.9, dotColor: 'rgba(228, 156, 117, 0.65)' };
+  }
+  // Standard DPR (desktop web) — enhanced visibility
+  return { spacing: 13, dotRadius: 1.1, dotColor: 'rgba(228, 156, 117, 0.75)' };
+}
+
+// Active config — set by createParticles, read by renderParticles
+let activeConfig: VisualConfig = getVisualConfig(1);
 
 /**
  * Create particles on a regular grid across the sand area.
  * On very large viewports, grid spacing is widened to stay within MAX_PARTICLES.
  */
-export function createParticles(width: number, height: number): Particle[] {
+export function createParticles(width: number, height: number, dpr: number = 1): Particle[] {
+  activeConfig = getVisualConfig(dpr);
+  const gridSpacing = activeConfig.spacing;
+
   const particles: Particle[] = [];
   const yMin = height * 0.0;
   const yMax = height * 1.0;
   const xPad = 4; // Small edge padding
 
   // Estimate particle count at default spacing; widen if it would exceed cap
-  const cols = Math.floor((width - xPad * 2) / GRID_SPACING);
-  const rows = Math.floor((yMax - yMin) / GRID_SPACING);
+  const cols = Math.floor((width - xPad * 2) / gridSpacing);
+  const rows = Math.floor((yMax - yMin) / gridSpacing);
   const estimated = cols * rows;
   const spacing = estimated > MAX_PARTICLES
-    ? GRID_SPACING * Math.ceil(Math.sqrt(estimated / MAX_PARTICLES))
-    : GRID_SPACING;
+    ? gridSpacing * Math.ceil(Math.sqrt(estimated / MAX_PARTICLES))
+    : gridSpacing;
 
   for (let gx = xPad; gx < width - xPad; gx += spacing) {
     for (let gy = yMin; gy < yMax; gy += spacing) {
@@ -146,10 +164,10 @@ export function renderParticles(
   dpr: number,
 ): void {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.fillStyle = DOT_COLOR;
+  ctx.fillStyle = activeConfig.dotColor;
   ctx.beginPath();
 
-  const r = DOT_RADIUS * dpr;
+  const r = activeConfig.dotRadius * dpr;
 
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
