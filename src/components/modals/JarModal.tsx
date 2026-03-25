@@ -89,7 +89,7 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
               </div>
 
               {/* Text — to the right on desktop, below on mobile */}
-              <div className="text-center md:text-left">
+              <div className="text-center md:text-left px-4">
                 {stoneCount === 0 ? (
                   <>
                     <p id="jar-heading" className="font-medium" style={{ color: 'white', fontSize: 'clamp(24px, 4vw, 48px)' }}>

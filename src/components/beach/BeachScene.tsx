@@ -88,7 +88,7 @@ export function BeachScene({ onInscribe, onTideRelease }: BeachSceneProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={viewportRef} className="relative w-full h-screen overflow-hidden">
+    <div ref={viewportRef} className="relative w-full h-dvh overflow-hidden">
       {/* Sand background */}
       <SandSurface />
 
