@@ -6,6 +6,7 @@ import { useJarStore } from '@/stores/jar-store';
 import { getShellComponent, type ShellVariant } from '@/components/svg/shells';
 import type { ShellColorScheme } from '@/lib/utils/constants';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+import { useSound } from '@/lib/hooks/use-sound';
 
 type TidePhase = 'idle' | 'rising' | 'peak' | 'receding' | 'stones' | 'toast';
 
@@ -30,6 +31,7 @@ export function TideRelease({
   const [flyingStones, setFlyingStones] = useState<number[]>([]);
   const addStones = useJarStore((s) => s.addStones);
   const reducedMotion = useReducedMotion();
+  const { play } = useSound();
 
   // Calculate jar icon target position for stone flight (pixels)
   const jarTarget = useMemo(() => {
@@ -58,12 +60,14 @@ export function TideRelease({
     }
 
     setPhase('rising');
+    play('wave-wash');
 
     // Timeline: rise(0-3s) → peak(3-6.5s) → recede(6.5-10s) → stones(9.5s) → toast(10.8s) → idle(12.3s)
     const t1 = setTimeout(() => setPhase('peak'), 3000);
     const t2 = setTimeout(() => setPhase('receding'), 6500);
     const t3 = setTimeout(() => {
       // ~70% visually receded — sea glass flies from ocean to jar
+      play('stone-added');
       setPhase('stones');
       setFlyingStones(Array.from({ length: inscribedCount }, (_, i) => i));
       addStones(inscribedCount);
@@ -87,7 +91,7 @@ export function TideRelease({
       clearTimeout(t4);
       clearTimeout(t5);
     };
-  }, [isActive, inscribedCount, onComplete, onShowToast, addStones]);
+  }, [isActive, inscribedCount, onComplete, onShowToast, addStones, play]);
 
   const ShellSVG = shellVariant ? getShellComponent(shellVariant) : null;
 

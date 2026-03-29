@@ -6,6 +6,7 @@ import { getStoneComponent, type StoneVariant } from '@/components/svg/stones';
 import { SHELL_COLOR_SCHEMES } from '@/lib/utils/constants';
 import { JarBig } from '@/components/svg/jars/JarBig';
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap';
+import { useSound } from '@/lib/hooks/use-sound';
 
 interface JarModalProps {
   isOpen: boolean;
@@ -16,6 +17,12 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
   const stoneCount = useJarStore((s) => s.stoneCount);
   const stones = useJarStore((s) => s.stones);
   const focusTrapRef = useFocusTrap(isOpen, onClose);
+  const { play } = useSound();
+
+  const handleClose = () => {
+    play('jar-modal');
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -40,7 +47,7 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
             <button
               className="absolute top-4 right-4 md:top-7 md:right-7 w-11 h-11 rounded-full flex items-center justify-center cursor-pointer z-10"
               style={{ backgroundColor: 'rgba(201,209,255,0.15)', color: '#C9D1FF' }}
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Close"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -58,29 +65,67 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
               <div className="relative w-[220px] h-[300px] md:w-[440px] md:h-[600px]" aria-hidden="true">
                 <JarBig className="w-full h-full" />
 
-                {/* Stones inside jar — positioned at the bottom of the jar body */}
+                {/* Stones inside jar — organic pile at the bottom */}
                 {stones.map((stone, idx) => {
                   const StoneSVG = getStoneComponent(stone.variant as StoneVariant);
                   const colorScheme = SHELL_COLOR_SCHEMES[stone.colorSeed % SHELL_COLOR_SCHEMES.length];
 
-                  const stoneX = 0.20 + (idx % 5) * 0.15 + (Math.random() * 0.05 - 0.025);
-                  const row = Math.floor(idx / 5);
-                  const stoneY = 0.85 - row * 0.08 + (Math.random() * 0.03 - 0.015);
+                  // Seeded pseudo-random from stone data (deterministic, no Math.random)
+                  const seed1 = ((stone.colorSeed * 9301 + 49297) % 233280) / 233280;
+                  const seed2 = ((stone.colorSeed * 7927 + 13849) % 233280) / 233280;
+                  const seed3 = (((idx + 1) * 11939 + stone.colorSeed * 3571) % 233280) / 233280;
+
+                  const totalStones = stones.length;
+
+                  // Variable stones per layer: 3, 4, 3, 4... for organic feel
+                  const layerPattern = [3, 4, 3, 4, 3, 4, 3, 4, 3, 4];
+                  // Calculate which layer this stone falls in
+                  let stonesBefore = 0;
+                  let layer = 0;
+                  while (stonesBefore + layerPattern[layer % layerPattern.length] <= idx) {
+                    stonesBefore += layerPattern[layer % layerPattern.length];
+                    layer++;
+                  }
+                  const perLayer = layerPattern[layer % layerPattern.length];
+                  const posInLayer = idx - stonesBefore;
+                  const stonesInThisLayer = Math.min(perLayer, totalStones - stonesBefore);
+
+                  // Y: bottom of jar ~84%, each layer rises ~6% with jitter
+                  const baseY = 0.84 - layer * 0.06;
+                  const jitterY = (seed2 - 0.5) * 0.025;
+                  const stoneY = Math.max(0.38, Math.min(0.86, baseY + jitterY));
+
+                  // X: spread across jar interior (27%–73%)
+                  const xMin = 0.27;
+                  const xMax = 0.73;
+                  const xSpread = xMax - xMin;
+                  const evenSpacing = stonesInThisLayer > 1
+                    ? xMin + (posInLayer / (stonesInThisLayer - 1)) * xSpread
+                    : 0.5;
+                  // Stagger odd layers for a natural pile
+                  const layerOffset = layer % 2 === 1 ? xSpread / (perLayer * 2.2) : 0;
+                  const jitterX = (seed3 - 0.5) * 0.08;
+                  const stoneX = Math.max(xMin, Math.min(xMax, evenSpacing + layerOffset + jitterX));
+
+                  // Stone size scales with jar: 22px on mobile (220px jar), 40px on desktop (440px jar)
+                  const baseStoneSize = typeof window !== 'undefined' && window.innerWidth >= 768 ? 40 : 22;
+                  const stoneSize = baseStoneSize * (0.9 + seed1 * 0.3);
+                  const rot = (seed2 - 0.5) * 45 + stone.rotation * 0.3;
 
                   return (
                     <motion.div
                       key={stone.id}
                       className="absolute"
                       style={{
-                        left: `${Math.min(0.80, Math.max(0.20, stoneX)) * 100}%`,
-                        top: `${Math.min(0.92, Math.max(0.60, stoneY)) * 100}%`,
-                        width: 32 * stone.scale,
-                        height: 32 * stone.scale,
-                        transform: `translate(-50%, -50%) rotate(${stone.rotation}deg)`,
+                        left: `${stoneX * 100}%`,
+                        top: `${stoneY * 100}%`,
+                        width: stoneSize,
+                        height: stoneSize,
+                        transform: `translate(-50%, -50%) rotate(${rot}deg)`,
                       }}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.08 * (idx % 10), type: 'spring' }}
+                      transition={{ delay: 0.06 * (idx % 12), type: 'spring' }}
                     >
                       <StoneSVG colorScheme={colorScheme} className="w-full h-full" />
                     </motion.div>
@@ -104,7 +149,7 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
                     <p style={{ color: 'white' }}>
                       <span className="text-5xl md:text-6xl font-bold">{stoneCount}</span>
                     </p>
-                    <p id="jar-heading" className="font-medium mt-1" style={{ color: 'white', fontSize: 'clamp(24px, 4vw, 48px)' }}>
+                    <p id="jar-heading" className="font-medium mt-1" style={{ color: 'white', fontSize: 'clamp(20px, 4vw, 48px)' }}>
                       Thought{stoneCount > 1 ? 's' : ''} released to the tide
                     </p>
                     <p className="font-normal mt-3" style={{ color: 'rgba(201,209,255,0.6)', fontSize: 16 }}>

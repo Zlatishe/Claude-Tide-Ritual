@@ -7,6 +7,7 @@ import { getShellComponent, SHELL_NAMES, type ShellVariant } from '@/components/
 import type { ShellColorScheme } from '@/lib/utils/constants';
 import { CHAR_LIMIT } from '@/lib/utils/constants';
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap';
+import { useSound } from '@/lib/hooks/use-sound';
 
 interface InscriptionModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function InscriptionModal({
   const [text, setText] = useState(initialText || '');
   const [isAtLimit, setIsAtLimit] = useState(false);
   const focusTrapRef = useFocusTrap(isOpen, onClose);
+  const { play } = useSound();
 
   useEffect(() => {
     if (isOpen) {
@@ -40,15 +42,17 @@ export function InscriptionModal({
 
   const handleInscribe = useCallback(() => {
     if (text.trim().length > 0) {
+      play('shell-placed');
       onInscribe(text.trim());
       setText('');
     }
-  }, [text, onInscribe]);
+  }, [text, onInscribe, play]);
 
   const handleClose = useCallback(() => {
+    play('shell-tap');
     setText('');
     onClose();
-  }, [onClose]);
+  }, [onClose, play]);
 
   return (
     <AnimatePresence>

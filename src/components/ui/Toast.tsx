@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
+import { useSound } from '@/lib/hooks/use-sound';
 
 interface ToastProps {
   message: string | null;
@@ -9,6 +10,13 @@ interface ToastProps {
 }
 
 export function Toast({ message, onDismiss }: ToastProps) {
+  const { play } = useSound();
+
+  const handleDismissClick = useCallback(() => {
+    play('shell-tap');
+    onDismiss();
+  }, [play, onDismiss]);
+
   useEffect(() => {
     if (message) {
       const timer = setTimeout(onDismiss, 6000);
@@ -53,7 +61,7 @@ export function Toast({ message, onDismiss }: ToastProps) {
               )}
             </div>
             <button
-              onClick={onDismiss}
+              onClick={handleDismissClick}
               className="flex-shrink-0 w-11 h-11 -mr-2 flex items-center justify-center rounded-full cursor-pointer"
               style={{ color: '#313E88', opacity: 0.4 }}
               aria-label="Dismiss"

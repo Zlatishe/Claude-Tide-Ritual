@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+import { useSound } from '@/lib/hooks/use-sound';
 
 type SweepPhase = 'idle' | 'rising' | 'peak' | 'receding';
 
@@ -14,6 +15,7 @@ interface WaveSweepProps {
 export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
   const [phase, setPhase] = useState<SweepPhase>('idle');
   const reducedMotion = useReducedMotion();
+  const { play } = useSound();
 
   useEffect(() => {
     if (!isActive) {
@@ -22,6 +24,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
     }
 
     setPhase('rising');
+    play('wave-wash');
 
     const riseDuration = reducedMotion ? 500 : 3000;
     const peakHold = reducedMotion ? 500 : 1500;
@@ -39,7 +42,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [isActive, onComplete, reducedMotion]);
+  }, [isActive, onComplete, reducedMotion, play]);
 
   const isUp = phase === 'rising' || phase === 'peak';
   const isReceding = phase === 'receding';

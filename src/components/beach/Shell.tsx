@@ -6,6 +6,7 @@ import { getShellComponent, SHELL_NAMES, type ShellVariant } from '@/components/
 import type { ShellColorScheme } from '@/lib/utils/constants';
 import { sandInteraction } from '@/lib/sand-particles/particle-state';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+import { useSound } from '@/lib/hooks/use-sound';
 
 interface ShellProps {
   id: string;
@@ -38,6 +39,7 @@ export function Shell({
   const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const reducedMotion = useReducedMotion();
+  const { play, stop } = useSound();
   const [showRipple, setShowRipple] = useState(false);
   const wasDragged = useRef(false);
   const prevInscribed = useRef(isInscribed);
@@ -161,11 +163,13 @@ export function Shell({
             dragElastic={0}
             dragMomentum={false}
             onDragStart={() => {
+              play('sand-drag');
               setIsDragging(true);
               wasDragged.current = true;
               sandInteraction.startDrag(id, 0, 0, size * 1.2);
             }}
             onDragEnd={() => {
+              stop('sand-drag');
               setIsDragging(false);
               sandInteraction.endDrag(id);
               setTimeout(() => {
@@ -175,7 +179,10 @@ export function Shell({
             whileHover={isDragging ? {} : { scale: 1.08 }}
             whileTap={isDragging ? {} : { scale: 0.95 }}
             onClick={() => {
-              if (!wasDragged.current) onClick(id);
+              if (!wasDragged.current) {
+                play('shell-tap');
+                onClick(id);
+              }
             }}
           >
             {/* Sand ripple rings on inscription (shell landing on sand) */}

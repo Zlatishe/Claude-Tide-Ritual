@@ -14,6 +14,7 @@ import { TideRelease } from '@/components/effects/TideRelease';
 import { SandParticleCanvas } from './SandParticleCanvas';
 import { useBeachStore } from '@/stores/beach-store';
 import { useJarStore } from '@/stores/jar-store';
+import { useSound } from '@/lib/hooks/use-sound';
 
 interface BeachSceneProps {
   onInscribe?: (text: string, shellVariant: number) => void;
@@ -40,6 +41,8 @@ export function BeachScene({ onInscribe, onTideRelease }: BeachSceneProps) {
   const isJarModalOpen = useJarStore((s) => s.isJarModalOpen);
   const openJar = useJarStore((s) => s.openJar);
   const closeJar = useJarStore((s) => s.closeJar);
+
+  const { play } = useSound();
 
   const activeShell = shells.find((s) => s.id === activeShellId);
   const inscribedShells = shells.filter((s) => s.isInscribed);
@@ -85,6 +88,11 @@ export function BeachScene({ onInscribe, onTideRelease }: BeachSceneProps) {
     }
   }, [completeTideRelease, onTideRelease]);
 
+  const handleJarClick = useCallback(() => {
+    play('jar-modal');
+    openJar();
+  }, [play, openJar]);
+
   const viewportRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -96,7 +104,7 @@ export function BeachScene({ onInscribe, onTideRelease }: BeachSceneProps) {
       <SandParticleCanvas />
 
       {/* Header */}
-      <Header stoneCount={stoneCount} onJarClick={openJar} />
+      <Header stoneCount={stoneCount} onJarClick={handleJarClick} />
 
       {/* CTA text — positioned above wave area, hidden when inscribed shells exist */}
       <AnimatePresence>
