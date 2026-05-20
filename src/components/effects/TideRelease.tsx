@@ -210,7 +210,7 @@ export function TideRelease({
 
               {/* Breathe out text */}
               <motion.p
-                className="text-3xl md:text-4xl font-bold"
+                className="t-h1"
                 style={{ color: '#C9D1FF' }}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -219,8 +219,8 @@ export function TideRelease({
                 Breathe out
               </motion.p>
               <motion.p
-                className="mt-3 font-normal"
-                style={{ color: 'rgba(201,209,255,0.7)', fontSize: 16 }}
+                className="t-support mt-2"
+                style={{ color: 'var(--text-secondary-dark)' }}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}

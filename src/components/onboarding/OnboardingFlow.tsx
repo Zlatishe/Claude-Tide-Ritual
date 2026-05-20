@@ -104,11 +104,8 @@ export function OnboardingFlow({ onSignIn, isLoading, initialStep = 0 }: Onboard
               transition={{ duration: 0.4 }}
             >
               <motion.p
-                className="font-bold text-center"
-                style={{
-                  color: '#313E88',
-                  fontSize: 'clamp(22px, 4vw, 32px)',
-                }}
+                className="t-h2 text-center"
+                style={{ color: 'var(--text-primary-light)' }}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -116,14 +113,10 @@ export function OnboardingFlow({ onSignIn, isLoading, initialStep = 0 }: Onboard
                 The tide comes and goes
               </motion.p>
               <motion.p
-                className="font-normal text-center mt-2"
-                style={{
-                  color: '#313E88',
-                  opacity: 0.5,
-                  fontSize: 'clamp(16px, 2vw, 18px)',
-                }}
+                className="t-support text-center mt-2"
+                style={{ color: 'var(--text-secondary-light)' }}
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 0.5, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
               >
                 It always leaves something behind
@@ -144,11 +137,10 @@ export function OnboardingFlow({ onSignIn, isLoading, initialStep = 0 }: Onboard
               {/* Speech bubble — matches "Ready to drift" tag from Shell.tsx */}
               <motion.div className="flex flex-col items-center">
                 <motion.div
-                  className="px-4 py-1.5 rounded-full font-medium whitespace-nowrap"
+                  className="px-4 py-2 rounded-full font-medium whitespace-nowrap t-support"
                   style={{
                     backgroundColor: 'rgba(201,209,255,0.85)',
-                    color: '#313E88',
-                    fontSize: 14,
+                    color: 'var(--text-primary-light)',
                   }}
                   initial={{ opacity: 0, y: 8, scale: 0.85 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -163,7 +155,7 @@ export function OnboardingFlow({ onSignIn, isLoading, initialStep = 0 }: Onboard
                     width: 0,
                     height: 12,
                     borderLeft: '1.5px dashed rgba(49,62,136,0.3)',
-                    marginTop: 3,
+                    marginTop: 4,
                   }}
                 />
               </motion.div>

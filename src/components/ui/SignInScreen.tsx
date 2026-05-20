@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useSandboxStore } from '@/stores/sandbox-store';
 
 interface SignInScreenProps {
   onSignIn: () => void;
@@ -10,7 +9,6 @@ interface SignInScreenProps {
 }
 
 export function SignInScreen({ onSignIn, isLoading, privacyText }: SignInScreenProps) {
-  const useTokens = useSandboxStore((s) => s.useTypographyTokens);
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center px-6"
@@ -39,31 +37,12 @@ export function SignInScreen({ onSignIn, isLoading, privacyText }: SignInScreenP
           />
         </svg>
 
-        {useTokens ? (
-          <>
-            <h1 className="t-h1 mb-2" style={{ color: 'var(--text-primary-light)' }}>
-              The Tide&apos;s Gift
-            </h1>
-            <p className="t-support mb-15" style={{ color: 'var(--text-secondary-light)' }}>
-              A ritual for letting go
-            </p>
-          </>
-        ) : (
-          <>
-            <h1
-              className="text-3xl md:text-5xl font-bold mb-2"
-              style={{ color: '#313E88' }}
-            >
-              The Tide&apos;s Gift
-            </h1>
-            <p
-              className="font-normal mb-15"
-              style={{ color: '#313E88', opacity: 0.5, fontSize: 'clamp(16px, 2vw, 18px)' }}
-            >
-              A ritual for letting go
-            </p>
-          </>
-        )}
+        <h1 className="t-h1 mb-2" style={{ color: 'var(--text-primary-light)' }}>
+          The Tide&apos;s Gift
+        </h1>
+        <p className="t-support mb-16" style={{ color: 'var(--text-secondary-light)' }}>
+          A ritual for letting go
+        </p>
 
         <motion.button
           onClick={onSignIn}
@@ -79,14 +58,7 @@ export function SignInScreen({ onSignIn, isLoading, privacyText }: SignInScreenP
           {isLoading ? 'Loading...' : 'Sign in with Google'}
         </motion.button>
 
-        <p
-          className={useTokens ? 't-caption mt-6' : 'mt-6 font-light'}
-          style={
-            useTokens
-              ? { color: 'var(--text-caption-light)' }
-              : { color: '#656980', fontSize: 14 }
-          }
-        >
+        <p className="t-caption mt-6" style={{ color: 'var(--text-caption-light)' }}>
           {privacyText || 'Your thoughts are private and only visible to you'}
         </p>
       </motion.div>

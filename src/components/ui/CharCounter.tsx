@@ -10,20 +10,16 @@ interface CharCounterProps {
 export function CharCounter({ count, id }: CharCounterProps) {
   const isNearLimit = count > CHAR_LIMIT * 0.8;
   const isAtLimit = count >= CHAR_LIMIT;
+  const isWarning = isNearLimit || isAtLimit;
 
   return (
     <span
       id={id}
-      className="font-light tabular-nums"
+      className="t-caption tabular-nums"
       role="status"
       aria-live="polite"
       style={{
-        fontSize: '14px',
-        color: isAtLimit
-          ? '#A35930'
-          : isNearLimit
-          ? '#A35930'
-          : '#656980',
+        color: isWarning ? 'var(--terracotta)' : 'var(--text-caption-light)',
       }}
     >
       {count} / {CHAR_LIMIT}{isAtLimit && ' — limit reached'}

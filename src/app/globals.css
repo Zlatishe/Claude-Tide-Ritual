@@ -11,27 +11,30 @@
   --content-bottom: clamp(170px, 24vh, 240px);
   --toast-bottom: clamp(240px, 34vh, 320px);
 
-  /* FIX-01 §1 — Typography roles & scale.
-     Light surfaces (sand, cream). */
+  /* Typography roles — light surfaces (sand, cream). */
   --text-primary-light: #313E88;
   --text-secondary-light: rgba(49, 62, 136, 0.55);
   --text-caption-light: rgba(49, 62, 136, 0.45);
-  /* Dark surfaces (navy modal, tide-rise overlay). */
+  /* Typography roles — dark surfaces (navy modal, tide-rise overlay). */
   --text-primary-dark: #FFFFFF;
   --text-secondary-dark: rgba(201, 209, 255, 0.65);
   --text-caption-dark: rgba(201, 209, 255, 0.5);
-  /* Fluid type scale. */
-  --fs-hero:    clamp(44px, 6vw, 64px);    /* FIX-02 §3 — hero numerals (stone count) */
-  --fs-display: clamp(28px, 5vw, 48px);
-  --fs-h1:      clamp(24px, 4vw, 36px);
-  --fs-h2:      clamp(20px, 3vw, 28px);
-  --fs-h3:      clamp(18px, 2.5vw, 22px);
-  --fs-body:    clamp(15px, 1.6vw, 17px);
-  --fs-support: clamp(15px, 1.4vw, 16px); /* FIX-02 §3 — was fixed 14px */
-  --fs-caption: clamp(12px, 1.1vw, 13px); /* FIX-02 §3 — was fixed 13px */
-  --lh-tight: 1.25;
-  --lh-snug: 1.35;
-  --lh-relaxed: 1.55;
+
+  /* FIX-03 §2c — Strict 8-pt grid type scale.
+     Every endpoint is a multiple of 4 (most are multiples of 8). No 14/15
+     tier — small-text differentiation comes from weight/color/leading, not
+     size. See DESIGN_SYSTEM.md for the picking-a-class table. */
+  --fs-caption: 12px;                     /* Footnote, char counter, micro-label */
+  --fs-support: 16px;                     /* Support line, kicker, label */
+  --fs-body:    clamp(16px, 1.5vw, 20px); /* Paragraph, input text */
+  --fs-h3:      clamp(20px, 2vw, 24px);   /* Sub-heading */
+  --fs-h2:      clamp(24px, 3vw, 32px);   /* Modal heading, section heading */
+  --fs-h1:      clamp(32px, 4vw, 40px);   /* Page-level heading */
+  --fs-hero:    clamp(48px, 6vw, 64px);   /* Hero numerals (stone count) */
+  /* Unitless line-height ratios. */
+  --lh-tight:   1.2;  /* Headings */
+  --lh-snug:    1.4;  /* Support, kicker */
+  --lh-relaxed: 1.6;  /* Body */
 }
 
 /* FIX-01 §1 — Type-role utility classes. */

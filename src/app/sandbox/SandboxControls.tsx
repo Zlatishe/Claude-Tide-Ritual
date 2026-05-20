@@ -10,32 +10,6 @@ const SCENES: { value: SandboxScene; label: string }[] = [
   { value: 'signin', label: 'Sign-in' },
 ];
 
-const EXPERIMENTS: {
-  key:
-    | 'useTypographyTokens'
-    | 'balancedJarCopy'
-    | 'organicWaveMotion'
-    | 'unifiedShellModuleType'
-    | 'refinedJarBalance'
-    | 'wavePathMorphing'
-    | 'waveSecondaryHarmonic'
-    | 'waveAmplitudeBreathing'
-    | 'waveFoamStreaks';
-  label: string;
-  note: string;
-  wired: boolean;
-}[] = [
-  { key: 'useTypographyTokens', label: 'Typography tokens', note: 'FIX-01 §1 — Header, SignInScreen, JarModal', wired: true },
-  { key: 'balancedJarCopy', label: 'Balanced JarModal couplet', note: 'FIX-01 §2 — open Jar with stones to see', wired: true },
-  { key: 'unifiedShellModuleType', label: 'Shell module type', note: 'FIX-01 §5 — open Inscription modal', wired: true },
-  { key: 'refinedJarBalance', label: 'Jar type balance', note: 'FIX-02 §3 — t-hero count + t-h2 heading', wired: true },
-  { key: 'organicWaveMotion', label: 'Wave: organic motion', note: 'FIX-02 §4a — counter-current + big y-bobs', wired: true },
-  { key: 'wavePathMorphing', label: 'Wave: path morphing', note: 'FIX-02 §4b — crests shift via d-attribute anim', wired: true },
-  { key: 'waveSecondaryHarmonic', label: 'Wave: harmonic ripple', note: 'FIX-02 §4c — overlays high-freq wind chop', wired: true },
-  { key: 'waveAmplitudeBreathing', label: 'Wave: amplitude breath', note: 'FIX-02 §4d — slow scaleY inhale/exhale', wired: true },
-  { key: 'waveFoamStreaks', label: 'Wave: foam streaks', note: 'FIX-02 §4e — drifting foam lines', wired: true },
-];
-
 export function SandboxControls() {
   const s = useSandboxStore();
   const shells = useBeachStore((st) => st.shells);
@@ -85,7 +59,7 @@ export function SandboxControls() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => s.set('controlsSide', s.controlsSide === 'right' ? 'left' : 'right')}
-            className="text-xs px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
+            className="text-xs px-2 py-1 rounded hover:bg-white/10 cursor-pointer"
             aria-label="Switch side"
             title="Switch side"
           >
@@ -93,7 +67,7 @@ export function SandboxControls() {
           </button>
           <button
             onClick={() => s.set('controlsOpen', false)}
-            className="text-xs px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
+            className="text-xs px-2 py-1 rounded hover:bg-white/10 cursor-pointer"
             aria-label="Hide controls"
           >
             ✕
@@ -110,7 +84,7 @@ export function SandboxControls() {
               <button
                 key={sc.value}
                 onClick={() => s.set('scene', sc.value)}
-                className="px-2 py-1.5 rounded text-xs font-medium cursor-pointer"
+                className="px-2 py-2 rounded text-xs font-medium cursor-pointer"
                 style={{
                   backgroundColor: s.scene === sc.value ? '#313E88' : 'rgba(49,62,136,0.08)',
                   color: s.scene === sc.value ? 'white' : '#313E88',
@@ -129,7 +103,7 @@ export function SandboxControls() {
                   <button
                     key={n}
                     onClick={() => s.set('onboardingStep', n)}
-                    className="flex-1 py-1.5 rounded text-xs font-medium cursor-pointer"
+                    className="flex-1 py-2 rounded text-xs font-medium cursor-pointer"
                     style={{
                       backgroundColor: s.onboardingStep === n ? '#E49C75' : 'rgba(49,62,136,0.08)',
                       color: s.onboardingStep === n ? '#292E64' : '#313E88',
@@ -192,7 +166,7 @@ export function SandboxControls() {
             <Section title="Actions">
               <button
                 onClick={() => openJar()}
-                className="w-full py-2 rounded text-xs font-medium cursor-pointer mb-1.5"
+                className="w-full py-2 rounded text-xs font-medium cursor-pointer mb-2"
                 style={{ backgroundColor: '#C9D1FF', color: '#313E88' }}
               >
                 Open Jar modal
@@ -202,7 +176,7 @@ export function SandboxControls() {
                   const first = shells[0];
                   if (first) openInscription(first.id);
                 }}
-                className="w-full py-2 rounded text-xs font-medium cursor-pointer mb-1.5"
+                className="w-full py-2 rounded text-xs font-medium cursor-pointer mb-2"
                 style={{ backgroundColor: '#C9D1FF', color: '#313E88' }}
               >
                 Open Inscription modal
@@ -233,18 +207,8 @@ export function SandboxControls() {
           />
         </Section>
 
-        {/* Design experiments */}
-        <Section title="Design experiments">
-          {EXPERIMENTS.map((exp) => (
-            <Toggle
-              key={exp.key}
-              label={exp.label}
-              note={`${exp.note}${exp.wired ? '' : ' — not yet wired'}`}
-              checked={s[exp.key]}
-              onChange={(v) => s.set(exp.key, v)}
-            />
-          ))}
-        </Section>
+        {/* Design experiments — FIX-01/02 toggles shipped to prod (FIX-03 §2).
+            Reserved for FIX-03 §4 tide-wave experiments next pass. */}
 
         {/* Reset */}
         <button
@@ -267,8 +231,8 @@ export function SandboxControls() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-[10px] font-bold tracking-wider opacity-70 mb-1.5 uppercase">{title}</h3>
-      <div className="space-y-1.5">{children}</div>
+      <h3 className="text-[10px] font-bold tracking-wider opacity-70 mb-2 uppercase">{title}</h3>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 }
@@ -289,12 +253,12 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-start gap-2 cursor-pointer select-none py-0.5">
+    <label className="flex items-start gap-2 cursor-pointer select-none py-1">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 cursor-pointer"
+        className="mt-1 cursor-pointer"
       />
       <span className="flex-1">
         <span className="text-[12px]">{label}</span>

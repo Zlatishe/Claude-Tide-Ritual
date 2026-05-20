@@ -8,7 +8,6 @@ import type { ShellColorScheme } from '@/lib/utils/constants';
 import { CHAR_LIMIT } from '@/lib/utils/constants';
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap';
 import { useSound } from '@/lib/hooks/use-sound';
-import { useSandboxStore } from '@/stores/sandbox-store';
 
 interface InscriptionModalProps {
   isOpen: boolean;
@@ -31,7 +30,6 @@ export function InscriptionModal({
   const [isAtLimit, setIsAtLimit] = useState(false);
   const focusTrapRef = useFocusTrap(isOpen, onClose);
   const { play } = useSound();
-  const unifiedType = useSandboxStore((s) => s.unifiedShellModuleType);
   const hasText = text.trim().length > 0;
 
   useEffect(() => {
@@ -99,17 +97,11 @@ export function InscriptionModal({
             >
               {/* Shell illustration */}
               <div className="flex flex-col items-center mb-4">
-                <div className={`w-20 h-20 md:w-24 md:h-24 ${unifiedType ? 'mb-1.5' : 'mb-3'}`} aria-hidden="true">
+                <div className="w-20 h-20 md:w-24 md:h-24 mb-2" aria-hidden="true">
                   <ShellSVG colorScheme={shellColorScheme} className="w-full h-full" />
                 </div>
-                <span
-                  className={unifiedType ? 't-caption' : 'font-normal'}
-                  style={
-                    unifiedType
-                      ? { color: 'var(--text-secondary-light)' }
-                      : { color: '#A35930', fontSize: '14px' }
-                  }
-                >
+                {/* Shell name — t-support, peers with JarModal support line */}
+                <span className="t-support" style={{ color: 'var(--text-secondary-light)' }}>
                   {shellName}
                 </span>
               </div>
@@ -117,8 +109,8 @@ export function InscriptionModal({
               {/* Question */}
               <h2
                 id="inscription-heading"
-                className={unifiedType ? 't-h2 text-center mb-4' : 'text-xl md:text-2xl font-bold text-center mb-5'}
-                style={{ color: unifiedType ? 'var(--text-primary-light)' : '#313E88' }}
+                className="t-h2 text-center mb-4"
+                style={{ color: 'var(--text-primary-light)' }}
               >
                 What&apos;s on your mind?
               </h2>
@@ -138,12 +130,12 @@ export function InscriptionModal({
                     }
                   }}
                   placeholder="Write it here, then let the tide take it..."
-                  className={`w-full h-28 md:h-32 p-4 rounded-xl resize-none focus:outline-none focus:ring-2 placeholder-secondary${unifiedType ? '' : ' text-sm'}`}
+                  className="w-full h-28 md:h-32 p-4 rounded-xl resize-none focus:outline-none focus:ring-2 placeholder-secondary"
                   style={{
                     backgroundColor: 'white',
-                    color: '#313E88',
+                    color: 'var(--text-primary-light)',
                     border: `1px solid ${isAtLimit ? '#E49C75' : 'rgba(201,209,255,0.5)'}`,
-                    fontSize: unifiedType ? 'var(--fs-body)' : undefined,
+                    fontSize: 'var(--fs-body)',
                   }}
                   animate={isAtLimit ? { x: [0, -3, 3, -2, 2, 0] } : { x: 0 }}
                   transition={{ duration: 0.3 }}
@@ -151,7 +143,7 @@ export function InscriptionModal({
                   aria-labelledby="inscription-heading"
                   aria-describedby="char-counter"
                 />
-                <div className="flex justify-end mt-1.5 pr-1">
+                <div className="flex justify-end mt-2 pr-1">
                   <CharCounter count={text.length} id="char-counter" />
                 </div>
               </div>
@@ -159,7 +151,7 @@ export function InscriptionModal({
               {/* Inscribe button — solid terracotta, fades in as user types.
                   The disabled→enabled state tween (350ms) is the hierarchy
                   signal; no outline variant needed (FIX-02 §1). */}
-              <div className={`flex justify-center ${unifiedType ? 'mt-6' : 'mt-4'}`}>
+              <div className="flex justify-center mt-6">
                 <motion.button
                   className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer min-h-[44px]"
                   initial={false}

@@ -3,8 +3,10 @@
 /**
  * Sandbox config store.
  *
- * Read by sandbox UI for control state. Optionally read by individual
- * components when a design-experiment toggle is wired up.
+ * Holds scene controls + state-shape sliders for the /sandbox visual QA route.
+ * After FIX-03, the FIX-01/02 design-experiment toggles are gone (their winners
+ * shipped to prod). The remaining "design experiments" slot is reserved for
+ * the FIX-03 §4 tide-wave toggles (coming next pass).
  *
  * In production (the main app route) this store is never written to and
  * always returns its initial values, so reading from it is a no-op.
@@ -34,23 +36,6 @@ interface SandboxState {
   controlsOpen: boolean;
   controlsSide: 'left' | 'right';
 
-  // ── Design experiments ──────────────────────────────────────────────────
-
-  // FIX-01 (kept)
-  useTypographyTokens: boolean;     // §1 — token-based type roles
-  balancedJarCopy: boolean;          // §2 — couplet <br> in JarModal support line
-  organicWaveMotion: boolean;        // §4a — counter-current + larger y-bobs
-  unifiedShellModuleType: boolean;   // §5 — token-based sizes in InscriptionModal
-
-  // FIX-02 §3 — JarModal type balance (t-hero count, t-h2 heading, fluid support)
-  refinedJarBalance: boolean;
-
-  // FIX-02 §4 — Wave experiment toggles (independent, mix-and-match)
-  wavePathMorphing: boolean;       // Animate SVG path 'd' through phase-shifted keyframes
-  waveSecondaryHarmonic: boolean;  // Overlay high-freq ripple on each wave path
-  waveAmplitudeBreathing: boolean; // Slow scaleY breath per layer, anchored at bottom
-  waveFoamStreaks: boolean;        // Independent drifting foam lines on wave surface
-
   // Setters
   set: <K extends keyof Omit<SandboxState, 'set' | 'reset'>>(
     key: K,
@@ -71,15 +56,6 @@ const initial = {
   hideUIChrome: false,
   controlsOpen: true,
   controlsSide: 'right' as 'left' | 'right',
-  useTypographyTokens: false,
-  balancedJarCopy: false,
-  organicWaveMotion: false,
-  unifiedShellModuleType: false,
-  refinedJarBalance: false,
-  wavePathMorphing: false,
-  waveSecondaryHarmonic: false,
-  waveAmplitudeBreathing: false,
-  waveFoamStreaks: false,
 };
 
 export const useSandboxStore = create<SandboxState>((set) => ({
