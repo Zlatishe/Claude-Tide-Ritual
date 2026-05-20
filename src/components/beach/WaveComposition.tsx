@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
 import { useSandboxStore } from '@/stores/sandbox-store';
@@ -73,6 +73,53 @@ function createWaveLinePath(
   return points.join(' ');
 }
 
+/**
+ * Hook that returns a state cycling through indices [0, 1, ..., length-1]
+ * every `durationSec` seconds. Used to drive path-morphing via React state
+ * (we swap which precomputed path the <path d=...> renders, instead of
+ * trying to animate the SVG `d` attribute through Framer Motion — which
+ * has unreliable path-string interpolation).
+ */
+function useCyclicIndex(length: number, durationSec: number, active: boolean): number {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (!active || length <= 1) {
+      setIdx(0);
+      return;
+    }
+    const stepMs = (durationSec * 1000) / length;
+    const id = setInterval(() => {
+      setIdx((i) => (i + 1) % length);
+    }, stepMs);
+    return () => clearInterval(id);
+  }, [length, durationSec, active]);
+  return idx;
+}
+
+/** Conditionally wrap children in a breathing scaleY motion.div. */
+function MaybeBreathing({
+  active,
+  keyframes,
+  duration,
+  children,
+}: {
+  active: boolean;
+  keyframes: number[];
+  duration: number;
+  children: ReactNode;
+}) {
+  if (!active) return <>{children}</>;
+  return (
+    <motion.div
+      style={{ transformOrigin: 'bottom center', height: '100%', width: '100%' }}
+      animate={{ scaleY: keyframes }}
+      transition={{ duration, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export function WaveComposition({ className }: WaveCompositionProps) {
   const [mounted, setMounted] = useState(false);
   const [windowWidth, setWindowWidth] = useState(1600);
@@ -80,13 +127,13 @@ export function WaveComposition({ className }: WaveCompositionProps) {
 
   // §4a (organic) — bigger y-bobs + counter-current navy
   const organic = useSandboxStore((s) => s.organicWaveMotion);
-  // §4b (morph) — animate SVG path 'd' through phase-shifted keyframes
+  // §4b (morph) — cycle through phase-shifted path snapshots via state
   const morphing = useSandboxStore((s) => s.wavePathMorphing);
   // §4c (harmonic) — overlay high-freq ripple on each wave path
   const harmonic = useSandboxStore((s) => s.waveSecondaryHarmonic);
   // §4d (breathing) — slow scaleY breath per layer, origin at bottom
   const breathing = useSandboxStore((s) => s.waveAmplitudeBreathing);
-  // §4e (foam) — independent drifting foam streaks on the wave surface
+  // §4e (foam) — independent drifting foam streaks
   const foam = useSandboxStore((s) => s.waveFoamStreaks);
 
   useEffect(() => {
@@ -100,64 +147,50 @@ export function WaveComposition({ className }: WaveCompositionProps) {
   // Wave tile width — round up to nearest 100 to avoid excessive re-renders
   const W = Math.max(1600, Math.ceil(windowWidth / 100) * 100);
 
-  // --- Path generation ---
-  // harmonic2 params per layer — coprime frequencies to carrier so ripples
-  // don't repeat within a tile. Only applied when `harmonic` toggle is on.
+  // harmonic2 params per layer — coprime frequencies to carrier (2) so the
+  // ripple doesn't repeat within the tile. Only set when harmonic toggle on.
   const lavHarmonic = harmonic ? { freq: 7, amp: 2.5, phase: 0.5 } : undefined;
   const navHarmonic = harmonic ? { freq: 6, amp: 3.0, phase: 1.1 } : undefined;
   const goldHarmonic = harmonic ? { freq: 9, amp: 1.5, phase: 0.3 } : undefined;
 
-  // Lavender wave dimensions
   const lavH = 100;
-  // Navy wave dimensions
   const navH = 70;
 
-  // Base paths (used for static rendering + non-morphing fallback)
-  const lavPath = useMemo(
-    () => createWavePath(W, lavH, 10, 2, 0, lavHarmonic),
+  // Pre-compute paths. When morphing is on, we use the array of 4 phase
+  // snapshots and cycle through them with useCyclicIndex. When off, we
+  // just render snapshot 0 (the base path).
+  const lavMorphPaths = useMemo(
+    () => [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map((phase) =>
+      createWavePath(W, lavH, 10, 2, phase, lavHarmonic),
+    ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [W, harmonic],
   );
-  const navPath = useMemo(
-    () => createWavePath(W, navH, 14, 2, 1.2, navHarmonic),
+  const navMorphPaths = useMemo(
+    () => [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map((phase) =>
+      createWavePath(W, navH, 14, 2, 1.2 + phase, navHarmonic),
+    ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [W, harmonic],
   );
-  const goldLine = useMemo(
-    () => createWaveLinePath(W, 6, 3, 0.8, 10, goldHarmonic),
+  const goldMorphPaths = useMemo(
+    () => [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map((phase) =>
+      createWaveLinePath(W, 6, 3, 0.8 + phase, 10, goldHarmonic),
+    ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [W, harmonic],
   );
 
-  // §4b — 4-keyframe phase arrays for path morphing.
-  // We step through π/2 increments so the crests glide visibly.
-  // Same point count (200 steps) guarantees Framer can interpolate per-point.
-  const lavMorphPaths = useMemo(() => [
-    createWavePath(W, lavH, 10, 2, 0, lavHarmonic),
-    createWavePath(W, lavH, 10, 2, Math.PI / 2, lavHarmonic),
-    createWavePath(W, lavH, 10, 2, Math.PI, lavHarmonic),
-    createWavePath(W, lavH, 10, 2, (3 * Math.PI) / 2, lavHarmonic),
-    createWavePath(W, lavH, 10, 2, 0, lavHarmonic),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [W, harmonic]);
+  // Cycle indices — driven by setInterval state, so the <path d=...> swap
+  // is a normal React re-render (no Framer path interpolation needed).
+  const morphActive = mounted && !reducedMotion && morphing;
+  const lavIdx = useCyclicIndex(lavMorphPaths.length, 14, morphActive);
+  const navIdx = useCyclicIndex(navMorphPaths.length, 9, morphActive);
+  const goldIdx = useCyclicIndex(goldMorphPaths.length, 11, morphActive);
 
-  const navMorphPaths = useMemo(() => [
-    createWavePath(W, navH, 14, 2, 1.2, navHarmonic),
-    createWavePath(W, navH, 14, 2, 1.2 + Math.PI / 2, navHarmonic),
-    createWavePath(W, navH, 14, 2, 1.2 + Math.PI, navHarmonic),
-    createWavePath(W, navH, 14, 2, 1.2 + (3 * Math.PI) / 2, navHarmonic),
-    createWavePath(W, navH, 14, 2, 1.2, navHarmonic),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [W, harmonic]);
-
-  const goldMorphPaths = useMemo(() => [
-    createWaveLinePath(W, 6, 3, 0.8, 10, goldHarmonic),
-    createWaveLinePath(W, 6, 3, 0.8 + Math.PI / 2, 10, goldHarmonic),
-    createWaveLinePath(W, 6, 3, 0.8 + Math.PI, 10, goldHarmonic),
-    createWaveLinePath(W, 6, 3, 0.8 + (3 * Math.PI) / 2, 10, goldHarmonic),
-    createWaveLinePath(W, 6, 3, 0.8, 10, goldHarmonic),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [W, harmonic]);
+  const lavPath = lavMorphPaths[lavIdx];
+  const navPath = navMorphPaths[navIdx];
+  const goldLine = goldMorphPaths[goldIdx];
 
   if (!mounted) {
     return (
@@ -168,13 +201,21 @@ export function WaveComposition({ className }: WaveCompositionProps) {
     );
   }
 
-  // Foam streak specs — independent drifting "foam lines" on the wave surface.
-  // Three streaks with incoherent durations so they never align visually.
+  // Foam streak specs — incoherent durations (8 / 11 / 17) so they never align
   const foamStreaks = [
     { bottom: 28, duration: 11, opacity: 0.35, length: 80 },
     { bottom: 44, duration: 17, opacity: 0.25, length: 140 },
     { bottom: 18, duration: 8,  opacity: 0.40, length: 60 },
   ];
+
+  // CSS-transition the d-attribute swaps so they glide instead of snap.
+  // We apply transition to the <path> via inline style on its parent <g>.
+  // SVG transition on `d` is supported in modern Chrome/Safari/Firefox.
+  const pathTransitionStyle: React.CSSProperties = morphActive
+    ? { transition: 'd 3.5s ease-in-out' }
+    : {};
+
+  const breathingOn = !reducedMotion && breathing;
 
   return (
     <div
@@ -182,16 +223,9 @@ export function WaveComposition({ className }: WaveCompositionProps) {
       style={{ height: 'var(--wave-height)', zIndex: 3 }}
       aria-hidden="true"
     >
-      {/* 1) Lavender band — bottom-most, widest, gentle sway */}
+      {/* 1) Lavender band */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: lavH + 35 }}>
-        {/* §4d breathing wrapper — scaleY anchored at bottom */}
-        <motion.div
-          style={{ transformOrigin: 'bottom center', height: '100%', width: '100%' }}
-          animate={!reducedMotion && breathing ? { scaleY: [1, 1.12, 1, 0.94, 1] } : { scaleY: 1 }}
-          transition={!reducedMotion && breathing
-            ? { duration: 19, repeat: Infinity, ease: 'easeInOut' }
-            : {}}
-        >
+        <MaybeBreathing active={breathingOn} keyframes={[1, 1.12, 1, 0.94, 1]} duration={19}>
           <motion.div
             key={`lav-${W}-${organic ? 'org' : 'lin'}`}
             style={{ display: 'flex', width: W * 2, willChange: 'transform' }}
@@ -222,34 +256,16 @@ export function WaveComposition({ className }: WaveCompositionProps) {
                 preserveAspectRatio="none"
                 style={{ flexShrink: 0, display: 'block' }}
               >
-                {/* §4b morphing path */}
-                <motion.path
-                  d={lavPath}
-                  fill="#C9D1FF"
-                  fillOpacity={0.7}
-                  animate={!reducedMotion && morphing
-                    ? { d: lavMorphPaths }
-                    : { d: lavPath }}
-                  transition={!reducedMotion && morphing
-                    ? { duration: 14, repeat: Infinity, ease: 'easeInOut' }
-                    : {}}
-                />
+                <path d={lavPath} fill="#C9D1FF" fillOpacity={0.7} style={pathTransitionStyle} />
               </svg>
             ))}
           </motion.div>
-        </motion.div>
+        </MaybeBreathing>
       </div>
 
-      {/* 2) Dark navy wave — on top, stronger amplitude
-          (organic: counter-currents — moves right instead of left) */}
+      {/* 2) Dark navy wave */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: navH + 20 }}>
-        <motion.div
-          style={{ transformOrigin: 'bottom center', height: '100%', width: '100%' }}
-          animate={!reducedMotion && breathing ? { scaleY: [1, 1.08, 1, 0.96, 1] } : { scaleY: 1 }}
-          transition={!reducedMotion && breathing
-            ? { duration: 13, repeat: Infinity, ease: 'easeInOut' }
-            : {}}
-        >
+        <MaybeBreathing active={breathingOn} keyframes={[1, 1.08, 1, 0.96, 1]} duration={13}>
           <motion.div
             key={`nav-${W}-${organic ? 'org' : 'lin'}`}
             style={{
@@ -285,20 +301,11 @@ export function WaveComposition({ className }: WaveCompositionProps) {
                 preserveAspectRatio="none"
                 style={{ flexShrink: 0, display: 'block' }}
               >
-                <motion.path
-                  d={navPath}
-                  fill="#292E64"
-                  animate={!reducedMotion && morphing
-                    ? { d: navMorphPaths }
-                    : { d: navPath }}
-                  transition={!reducedMotion && morphing
-                    ? { duration: 9, repeat: Infinity, ease: 'easeInOut' }
-                    : {}}
-                />
+                <path d={navPath} fill="#292E64" style={pathTransitionStyle} />
               </svg>
             ))}
           </motion.div>
-        </motion.div>
+        </MaybeBreathing>
       </div>
 
       {/* 3) Thin gold/terracotta accent line */}
@@ -333,20 +340,13 @@ export function WaveComposition({ className }: WaveCompositionProps) {
               preserveAspectRatio="none"
               style={{ flexShrink: 0, display: 'block' }}
             >
-              <motion.path
+              <path
                 d={goldLine}
                 fill="none"
                 stroke="#E49C75"
+                strokeWidth="1.5"
                 strokeLinecap="round"
-                animate={!reducedMotion && morphing
-                  ? { d: goldMorphPaths, strokeWidth: [1.5, 1.8, 1.3, 1.8, 1.5] }
-                  : { d: goldLine, strokeWidth: 1.5 }}
-                transition={!reducedMotion && morphing
-                  ? {
-                      d: { duration: 11, repeat: Infinity, ease: 'easeInOut' },
-                      strokeWidth: { duration: 9, repeat: Infinity, ease: 'easeInOut' },
-                    }
-                  : {}}
+                style={pathTransitionStyle}
               />
             </svg>
           ))}
@@ -357,8 +357,7 @@ export function WaveComposition({ className }: WaveCompositionProps) {
       <div className="absolute bottom-0 left-0 w-full" style={{ height: 28, background: '#292E64' }} />
 
       {/* §4e — Foam streaks: thin bright lines drifting across the wave face
-          at incoherent durations (11s / 17s / 8s — no common factor). Each
-          reads as foam catching the light. Only shown when not reducedMotion. */}
+          at incoherent durations (8 / 11 / 17). Skip under reduced motion. */}
       {!reducedMotion && foam && foamStreaks.map((s, i) => (
         <motion.div
           key={i}
