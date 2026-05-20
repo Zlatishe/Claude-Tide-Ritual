@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useJarStore } from '@/stores/jar-store';
+import { useSandboxStore } from '@/stores/sandbox-store';
 import { getStoneComponent, type StoneVariant } from '@/components/svg/stones';
 import { SHELL_COLOR_SCHEMES } from '@/lib/utils/constants';
 import { JarBig } from '@/components/svg/jars/JarBig';
@@ -18,6 +19,18 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
   const stones = useJarStore((s) => s.stones);
   const focusTrapRef = useFocusTrap(isOpen, onClose);
   const { play } = useSound();
+  const balancedCopy = useSandboxStore((s) => s.balancedJarCopy);
+  const useTokens = useSandboxStore((s) => s.useTypographyTokens);
+
+  // Secondary support text — same role, two visual treatments depending on
+  // whether the type-tokens experiment is on. Both paths render on the dark
+  // (navy) surface so use the lavender-secondary token / hex equivalent.
+  const supportClass = useTokens ? 't-support' : 'font-normal';
+  const supportStyle: React.CSSProperties = useTokens
+    ? { color: 'var(--text-secondary-dark)' }
+    : { color: 'rgba(201,209,255,0.6)', fontSize: 16 };
+  // §2 — tighten heading→support gap from 12px (mt-3) to 8px (mt-2).
+  const supportMargin = balancedCopy ? 'mt-2' : 'mt-3';
 
   const handleClose = () => {
     play('jar-modal');
@@ -140,7 +153,7 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
                     <p id="jar-heading" className="font-medium" style={{ color: 'white', fontSize: 'clamp(24px, 4vw, 48px)' }}>
                       The Treasure Jar
                     </p>
-                    <p className="font-normal mt-3" style={{ color: 'rgba(201,209,255,0.6)', fontSize: 16 }}>
+                    <p className={`${supportClass} ${supportMargin}`} style={supportStyle}>
                       The tide brings gifts
                     </p>
                   </>
@@ -152,8 +165,16 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
                     <p id="jar-heading" className="font-medium mt-1" style={{ color: 'white', fontSize: 'clamp(20px, 4vw, 48px)' }}>
                       Thought{stoneCount > 1 ? 's' : ''} released to the tide
                     </p>
-                    <p className="font-normal mt-3" style={{ color: 'rgba(201,209,255,0.6)', fontSize: 16 }}>
-                      Each piece holds a moment you chose to let go
+                    <p className={`${supportClass} ${supportMargin}`} style={supportStyle}>
+                      {balancedCopy ? (
+                        <>
+                          Each piece holds a moment
+                          <br />
+                          you chose to let go
+                        </>
+                      ) : (
+                        'Each piece holds a moment you chose to let go'
+                      )}
                     </p>
                   </>
                 )}

@@ -14,10 +14,11 @@ import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
 interface OnboardingFlowProps {
   onSignIn: () => void;
   isLoading: boolean;
+  initialStep?: number;
 }
 
-export function OnboardingFlow({ onSignIn, isLoading }: OnboardingFlowProps) {
-  const [step, setStep] = useState(0);
+export function OnboardingFlow({ onSignIn, isLoading, initialStep = 0 }: OnboardingFlowProps) {
+  const [step, setStep] = useState(initialStep);
   const reducedMotion = useReducedMotion();
 
   const advance = useCallback(() => {

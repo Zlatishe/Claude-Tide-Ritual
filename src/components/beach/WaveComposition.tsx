@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+import { useSandboxStore } from '@/stores/sandbox-store';
 
 interface WaveCompositionProps {
   className?: string;
@@ -63,6 +64,10 @@ export function WaveComposition({ className }: WaveCompositionProps) {
   const [mounted, setMounted] = useState(false);
   const [windowWidth, setWindowWidth] = useState(1600);
   const reducedMotion = useReducedMotion();
+  // §4 — when on, layers gain independent y-bobs and the navy band
+  // counter-currents (moves opposite to lavender). Prime-ish periods
+  // (29s / 17s / 23s) prevent the visible loop from realigning.
+  const organic = useSandboxStore((s) => s.organicWaveMotion);
 
   useEffect(() => {
     setMounted(true);
@@ -101,10 +106,25 @@ export function WaveComposition({ className }: WaveCompositionProps) {
       {/* 1) Lavender band — bottom-most, widest, gentle sway */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: lavH + 25 }}>
         <motion.div
-          key={`lav-${W}`}
+          key={`lav-${W}-${organic ? 'org' : 'lin'}`}
           style={{ display: 'flex', width: W * 2, willChange: 'transform' }}
-          animate={reducedMotion ? { x: 0 } : { x: [0, -W] }}
-          transition={reducedMotion ? {} : { duration: 24, repeat: Infinity, ease: 'linear' }}
+          animate={
+            reducedMotion
+              ? { x: 0 }
+              : organic
+              ? { x: [0, -W], y: [0, -4, 0] }
+              : { x: [0, -W] }
+          }
+          transition={
+            reducedMotion
+              ? {}
+              : organic
+              ? {
+                  x: { duration: 29, repeat: Infinity, ease: 'linear' },
+                  y: { duration: 11, repeat: Infinity, ease: 'easeInOut' },
+                }
+              : { duration: 24, repeat: Infinity, ease: 'linear' }
+          }
         >
           {[0, 1].map((i) => (
             <svg key={i} width={W} height={lavH} viewBox={`0 0 ${W} ${lavH}`} preserveAspectRatio="none" style={{ flexShrink: 0, display: 'block' }}>
@@ -114,13 +134,34 @@ export function WaveComposition({ className }: WaveCompositionProps) {
         </motion.div>
       </div>
 
-      {/* 2) Dark navy wave — on top, stronger amplitude */}
+      {/* 2) Dark navy wave — on top, stronger amplitude
+            (organic: counter-currents — moves right instead of left) */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: navH + 12 }}>
         <motion.div
-          key={`nav-${W}`}
-          style={{ display: 'flex', width: W * 2, willChange: 'transform' }}
-          animate={reducedMotion ? { x: 0 } : { x: [0, -W] }}
-          transition={reducedMotion ? {} : { duration: 18, repeat: Infinity, ease: 'linear' }}
+          key={`nav-${W}-${organic ? 'org' : 'lin'}`}
+          style={{
+            display: 'flex',
+            width: W * 2,
+            willChange: 'transform',
+            transform: organic ? `translateX(-${W}px)` : undefined,
+          }}
+          animate={
+            reducedMotion
+              ? { x: 0 }
+              : organic
+              ? { x: [-W, 0], y: [0, 3, 0] }
+              : { x: [0, -W] }
+          }
+          transition={
+            reducedMotion
+              ? {}
+              : organic
+              ? {
+                  x: { duration: 17, repeat: Infinity, ease: 'linear' },
+                  y: { duration: 8.5, repeat: Infinity, ease: 'easeInOut', delay: -2 },
+                }
+              : { duration: 18, repeat: Infinity, ease: 'linear' }
+          }
         >
           {[0, 1].map((i) => (
             <svg key={i} width={W} height={navH} viewBox={`0 0 ${W} ${navH}`} preserveAspectRatio="none" style={{ flexShrink: 0, display: 'block' }}>
@@ -133,10 +174,25 @@ export function WaveComposition({ className }: WaveCompositionProps) {
       {/* 3) Thin gold/terracotta accent line */}
       <div className="absolute left-0 w-full overflow-hidden" style={{ bottom: 55, height: 24 }}>
         <motion.div
-          key={`gold-${W}`}
+          key={`gold-${W}-${organic ? 'org' : 'lin'}`}
           style={{ display: 'flex', width: W * 2, willChange: 'transform' }}
-          animate={reducedMotion ? { x: 0 } : { x: [0, -W] }}
-          transition={reducedMotion ? {} : { duration: 20, repeat: Infinity, ease: 'linear' }}
+          animate={
+            reducedMotion
+              ? { x: 0 }
+              : organic
+              ? { x: [0, -W], y: [0, -2, 1, 0] }
+              : { x: [0, -W] }
+          }
+          transition={
+            reducedMotion
+              ? {}
+              : organic
+              ? {
+                  x: { duration: 23, repeat: Infinity, ease: 'linear' },
+                  y: { duration: 6.5, repeat: Infinity, ease: 'easeInOut' },
+                }
+              : { duration: 20, repeat: Infinity, ease: 'linear' }
+          }
         >
           {[0, 1].map((i) => (
             <svg key={i} width={W} height={24} viewBox={`0 0 ${W} 24`} preserveAspectRatio="none" style={{ flexShrink: 0, display: 'block' }}>

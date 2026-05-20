@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSandboxStore } from '@/stores/sandbox-store';
 
 interface CallTideButtonProps {
   visible: boolean;
@@ -8,6 +9,11 @@ interface CallTideButtonProps {
 }
 
 export function CallTideButton({ visible, onClick }: CallTideButtonProps) {
+  // Paired with `ghostReadyToDriftCta`: when the modal CTA goes ghost,
+  // this primary CTA picks up extra weight (size + glow) to amplify the
+  // hierarchy the user reads across the journey.
+  const boosted = useSandboxStore((s) => s.ghostReadyToDriftCta);
+
   return (
     <AnimatePresence>
       {visible && (
@@ -20,14 +26,17 @@ export function CallTideButton({ visible, onClick }: CallTideButtonProps) {
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
           <motion.button
-            className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer"
+            className={
+              boosted
+                ? 'px-7 py-3.5 rounded-full font-semibold text-base cursor-pointer'
+                : 'px-6 py-3 rounded-full font-semibold text-sm cursor-pointer'
+            }
             style={{
               backgroundColor: '#E49C75',
               color: '#292E64',
+              boxShadow: boosted ? '0 6px 24px -8px rgba(228,156,117,0.55)' : undefined,
             }}
-            whileHover={{
-              scale: 1.05,
-            }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.96 }}
             onClick={onClick}
           >

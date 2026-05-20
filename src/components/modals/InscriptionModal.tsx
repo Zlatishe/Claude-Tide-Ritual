@@ -8,6 +8,7 @@ import type { ShellColorScheme } from '@/lib/utils/constants';
 import { CHAR_LIMIT } from '@/lib/utils/constants';
 import { useFocusTrap } from '@/lib/hooks/use-focus-trap';
 import { useSound } from '@/lib/hooks/use-sound';
+import { useSandboxStore } from '@/stores/sandbox-store';
 
 interface InscriptionModalProps {
   isOpen: boolean;
@@ -30,6 +31,9 @@ export function InscriptionModal({
   const [isAtLimit, setIsAtLimit] = useState(false);
   const focusTrapRef = useFocusTrap(isOpen, onClose);
   const { play } = useSound();
+  const ghostCta = useSandboxStore((s) => s.ghostReadyToDriftCta);
+  const unifiedType = useSandboxStore((s) => s.unifiedShellModuleType);
+  const hasText = text.trim().length > 0;
 
   useEffect(() => {
     if (isOpen) {
@@ -96,12 +100,16 @@ export function InscriptionModal({
             >
               {/* Shell illustration */}
               <div className="flex flex-col items-center mb-4">
-                <div className="w-20 h-20 md:w-24 md:h-24 mb-3" aria-hidden="true">
+                <div className={`w-20 h-20 md:w-24 md:h-24 ${unifiedType ? 'mb-1.5' : 'mb-3'}`} aria-hidden="true">
                   <ShellSVG colorScheme={shellColorScheme} className="w-full h-full" />
                 </div>
                 <span
-                  className="font-normal"
-                  style={{ color: '#A35930', fontSize: '14px' }}
+                  className={unifiedType ? 't-caption' : 'font-normal'}
+                  style={
+                    unifiedType
+                      ? { color: 'var(--text-secondary-light)' }
+                      : { color: '#A35930', fontSize: '14px' }
+                  }
                 >
                   {shellName}
                 </span>
@@ -110,8 +118,8 @@ export function InscriptionModal({
               {/* Question */}
               <h2
                 id="inscription-heading"
-                className="text-xl md:text-2xl font-bold text-center mb-5"
-                style={{ color: '#313E88' }}
+                className={unifiedType ? 't-h2 text-center mb-4' : 'text-xl md:text-2xl font-bold text-center mb-5'}
+                style={{ color: unifiedType ? 'var(--text-primary-light)' : '#313E88' }}
               >
                 What&apos;s on your mind?
               </h2>
@@ -131,11 +139,12 @@ export function InscriptionModal({
                     }
                   }}
                   placeholder="Write it here, then let the tide take it..."
-                  className="w-full h-28 md:h-32 p-4 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 placeholder:text-sm"
+                  className={`w-full h-28 md:h-32 p-4 rounded-xl resize-none focus:outline-none focus:ring-2 ${unifiedType ? '' : 'text-sm placeholder:text-sm'}`}
                   style={{
                     backgroundColor: 'white',
                     color: '#313E88',
                     border: `1px solid ${isAtLimit ? '#E49C75' : 'rgba(201,209,255,0.5)'}`,
+                    fontSize: unifiedType ? 'var(--fs-body)' : undefined,
                   }}
                   animate={isAtLimit ? { x: [0, -3, 3, -2, 2, 0] } : { x: 0 }}
                   transition={{ duration: 0.3 }}
@@ -148,21 +157,40 @@ export function InscriptionModal({
                 </div>
               </div>
 
-              {/* Inscribe button */}
-              <div className="flex justify-center mt-4">
-                <motion.button
-                  className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer min-h-[44px]"
-                  style={{
-                    backgroundColor: text.trim().length > 0 ? '#E49C75' : 'rgba(228,156,117,0.4)',
-                    color: text.trim().length > 0 ? '#292E64' : 'rgba(41,46,100,0.5)',
-                  }}
-                  whileHover={text.trim().length > 0 ? { scale: 1.05 } : {}}
-                  whileTap={text.trim().length > 0 ? { scale: 0.96 } : {}}
-                  onClick={handleInscribe}
-                  disabled={text.trim().length === 0}
-                >
-                  Ready to drift
-                </motion.button>
+              {/* Inscribe button — §3 ghost variant demotes this to secondary.
+                  Reasoning: "Ready to drift" is a commit step, not the ritual
+                  climax. "Wash it away" remains the only primary. */}
+              <div className={`flex justify-center ${unifiedType ? 'mt-6' : 'mt-4'}`}>
+                {ghostCta ? (
+                  <motion.button
+                    className="px-6 py-3 rounded-full text-sm font-medium cursor-pointer min-h-[44px]"
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: hasText ? '#313E88' : 'rgba(49,62,136,0.45)',
+                      border: `1.5px solid ${hasText ? '#E49C75' : 'rgba(228,156,117,0.4)'}`,
+                    }}
+                    whileHover={hasText ? { scale: 1.03, backgroundColor: 'rgba(228,156,117,0.1)' } : {}}
+                    whileTap={hasText ? { scale: 0.97 } : {}}
+                    onClick={handleInscribe}
+                    disabled={!hasText}
+                  >
+                    Ready to drift
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer min-h-[44px]"
+                    style={{
+                      backgroundColor: hasText ? '#E49C75' : 'rgba(228,156,117,0.4)',
+                      color: hasText ? '#292E64' : 'rgba(41,46,100,0.5)',
+                    }}
+                    whileHover={hasText ? { scale: 1.05 } : {}}
+                    whileTap={hasText ? { scale: 0.96 } : {}}
+                    onClick={handleInscribe}
+                    disabled={!hasText}
+                  >
+                    Ready to drift
+                  </motion.button>
+                )}
               </div>
             </motion.div>
           </div>
