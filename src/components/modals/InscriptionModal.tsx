@@ -31,7 +31,6 @@ export function InscriptionModal({
   const [isAtLimit, setIsAtLimit] = useState(false);
   const focusTrapRef = useFocusTrap(isOpen, onClose);
   const { play } = useSound();
-  const ghostCta = useSandboxStore((s) => s.ghostReadyToDriftCta);
   const unifiedType = useSandboxStore((s) => s.unifiedShellModuleType);
   const hasText = text.trim().length > 0;
 
@@ -139,7 +138,7 @@ export function InscriptionModal({
                     }
                   }}
                   placeholder="Write it here, then let the tide take it..."
-                  className={`w-full h-28 md:h-32 p-4 rounded-xl resize-none focus:outline-none focus:ring-2 ${unifiedType ? '' : 'text-sm placeholder:text-sm'}`}
+                  className={`w-full h-28 md:h-32 p-4 rounded-xl resize-none focus:outline-none focus:ring-2 placeholder-secondary${unifiedType ? '' : ' text-sm'}`}
                   style={{
                     backgroundColor: 'white',
                     color: '#313E88',
@@ -157,40 +156,25 @@ export function InscriptionModal({
                 </div>
               </div>
 
-              {/* Inscribe button — §3 ghost variant demotes this to secondary.
-                  Reasoning: "Ready to drift" is a commit step, not the ritual
-                  climax. "Wash it away" remains the only primary. */}
+              {/* Inscribe button — solid terracotta, fades in as user types.
+                  The disabled→enabled state tween (350ms) is the hierarchy
+                  signal; no outline variant needed (FIX-02 §1). */}
               <div className={`flex justify-center ${unifiedType ? 'mt-6' : 'mt-4'}`}>
-                {ghostCta ? (
-                  <motion.button
-                    className="px-6 py-3 rounded-full text-sm font-medium cursor-pointer min-h-[44px]"
-                    style={{
-                      backgroundColor: 'transparent',
-                      color: hasText ? '#313E88' : 'rgba(49,62,136,0.45)',
-                      border: `1.5px solid ${hasText ? '#E49C75' : 'rgba(228,156,117,0.4)'}`,
-                    }}
-                    whileHover={hasText ? { scale: 1.03, backgroundColor: 'rgba(228,156,117,0.1)' } : {}}
-                    whileTap={hasText ? { scale: 0.97 } : {}}
-                    onClick={handleInscribe}
-                    disabled={!hasText}
-                  >
-                    Ready to drift
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer min-h-[44px]"
-                    style={{
-                      backgroundColor: hasText ? '#E49C75' : 'rgba(228,156,117,0.4)',
-                      color: hasText ? '#292E64' : 'rgba(41,46,100,0.5)',
-                    }}
-                    whileHover={hasText ? { scale: 1.05 } : {}}
-                    whileTap={hasText ? { scale: 0.96 } : {}}
-                    onClick={handleInscribe}
-                    disabled={!hasText}
-                  >
-                    Ready to drift
-                  </motion.button>
-                )}
+                <motion.button
+                  className="px-6 py-3 rounded-full font-semibold text-sm cursor-pointer min-h-[44px]"
+                  initial={false}
+                  animate={{
+                    backgroundColor: hasText ? '#E49C75' : 'rgba(228,156,117,0.4)',
+                    color: hasText ? '#292E64' : 'rgba(41,46,100,0.5)',
+                  }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  whileHover={hasText ? { scale: 1.05 } : {}}
+                  whileTap={hasText ? { scale: 0.96 } : {}}
+                  onClick={handleInscribe}
+                  disabled={!hasText}
+                >
+                  Ready to drift
+                </motion.button>
               </div>
             </motion.div>
           </div>

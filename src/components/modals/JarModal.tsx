@@ -21,6 +21,7 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
   const { play } = useSound();
   const balancedCopy = useSandboxStore((s) => s.balancedJarCopy);
   const useTokens = useSandboxStore((s) => s.useTypographyTokens);
+  const refinedBalance = useSandboxStore((s) => s.refinedJarBalance);
 
   // Secondary support text — same role, two visual treatments depending on
   // whether the type-tokens experiment is on. Both paths render on the dark
@@ -150,7 +151,11 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
               <div className="text-center md:text-left px-4">
                 {stoneCount === 0 ? (
                   <>
-                    <p id="jar-heading" className="font-medium" style={{ color: 'white', fontSize: 'clamp(24px, 4vw, 48px)' }}>
+                    <p
+                      id="jar-heading"
+                      className={refinedBalance ? 't-h2' : 'font-medium'}
+                      style={{ color: 'white', fontSize: refinedBalance ? undefined : 'clamp(24px, 4vw, 48px)' }}
+                    >
                       The Treasure Jar
                     </p>
                     <p className={`${supportClass} ${supportMargin}`} style={supportStyle}>
@@ -159,10 +164,18 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
                   </>
                 ) : (
                   <>
+                    {/* Stone count — hero numeral */}
                     <p style={{ color: 'white' }}>
-                      <span className="text-5xl md:text-6xl font-bold">{stoneCount}</span>
+                      <span className={refinedBalance ? 't-hero' : 'text-5xl md:text-6xl font-bold'}>
+                        {stoneCount}
+                      </span>
                     </p>
-                    <p id="jar-heading" className="font-medium mt-1" style={{ color: 'white', fontSize: 'clamp(20px, 4vw, 48px)' }}>
+                    {/* Heading — h2 tier when balanced, bespoke clamp when not */}
+                    <p
+                      id="jar-heading"
+                      className={refinedBalance ? 't-h2 mt-1' : 'font-medium mt-1'}
+                      style={{ color: 'white', fontSize: refinedBalance ? undefined : 'clamp(20px, 4vw, 48px)' }}
+                    >
                       Thought{stoneCount > 1 ? 's' : ''} released to the tide
                     </p>
                     <p className={`${supportClass} ${supportMargin}`} style={supportStyle}>

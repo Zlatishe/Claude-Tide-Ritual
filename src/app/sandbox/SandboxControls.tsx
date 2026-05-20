@@ -14,18 +14,26 @@ const EXPERIMENTS: {
   key:
     | 'useTypographyTokens'
     | 'balancedJarCopy'
-    | 'ghostReadyToDriftCta'
     | 'organicWaveMotion'
-    | 'unifiedShellModuleType';
+    | 'unifiedShellModuleType'
+    | 'refinedJarBalance'
+    | 'wavePathMorphing'
+    | 'waveSecondaryHarmonic'
+    | 'waveAmplitudeBreathing'
+    | 'waveFoamStreaks';
   label: string;
   note: string;
   wired: boolean;
 }[] = [
   { key: 'useTypographyTokens', label: 'Typography tokens', note: 'FIX-01 §1 — Header, SignInScreen, JarModal', wired: true },
   { key: 'balancedJarCopy', label: 'Balanced JarModal couplet', note: 'FIX-01 §2 — open Jar with stones to see', wired: true },
-  { key: 'ghostReadyToDriftCta', label: 'Ghost "Ready to drift" CTA', note: 'FIX-01 §3 — also boosts "Wash it away"', wired: true },
-  { key: 'organicWaveMotion', label: 'Counter-current wave motion', note: 'FIX-01 §4 — navy moves opposite + y-bob', wired: true },
-  { key: 'unifiedShellModuleType', label: 'Unified shell-module type', note: 'FIX-01 §5 — open Inscription modal', wired: true },
+  { key: 'unifiedShellModuleType', label: 'Shell module type', note: 'FIX-01 §5 — open Inscription modal', wired: true },
+  { key: 'refinedJarBalance', label: 'Jar type balance', note: 'FIX-02 §3 — t-hero count + t-h2 heading', wired: true },
+  { key: 'organicWaveMotion', label: 'Wave: organic motion', note: 'FIX-02 §4a — counter-current + big y-bobs', wired: true },
+  { key: 'wavePathMorphing', label: 'Wave: path morphing', note: 'FIX-02 §4b — crests shift via d-attribute anim', wired: true },
+  { key: 'waveSecondaryHarmonic', label: 'Wave: harmonic ripple', note: 'FIX-02 §4c — overlays high-freq wind chop', wired: true },
+  { key: 'waveAmplitudeBreathing', label: 'Wave: amplitude breath', note: 'FIX-02 §4d — slow scaleY inhale/exhale', wired: true },
+  { key: 'waveFoamStreaks', label: 'Wave: foam streaks', note: 'FIX-02 §4e — drifting foam lines', wired: true },
 ];
 
 export function SandboxControls() {
