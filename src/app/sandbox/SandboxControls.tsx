@@ -41,9 +41,21 @@ const TIDE_EASING_OPTIONS: { key: import('@/stores/sandbox-store').TideEasing; l
 ];
 
 const TIDE_LAYERS = [
-  { num: 1, label: 'Layer 1 (navy body)',     easeKey: 'tideLayer1Ease',     delayKey: 'tideLayer1Delay',     durKey: 'tideLayer1Duration' },
-  { num: 2, label: 'Layer 2 (mid purple)',    easeKey: 'tideLayer2Ease',     delayKey: 'tideLayer2Delay',     durKey: 'tideLayer2Duration' },
-  { num: 3, label: 'Layer 3 (lavender wash)', easeKey: 'tideLayer3Ease',     delayKey: 'tideLayer3Delay',     durKey: 'tideLayer3Duration' },
+  {
+    num: 1, label: 'Layer 1 (navy body)',
+    rise: { easeKey: 'tideLayer1Ease', delayKey: 'tideLayer1Delay', durKey: 'tideLayer1Duration' },
+    recede: { easeKey: 'tideLayer1RecedeEase', delayKey: 'tideLayer1RecedeDelay', durKey: 'tideLayer1RecedeDuration' },
+  },
+  {
+    num: 2, label: 'Layer 2 (mid purple)',
+    rise: { easeKey: 'tideLayer2Ease', delayKey: 'tideLayer2Delay', durKey: 'tideLayer2Duration' },
+    recede: { easeKey: 'tideLayer2RecedeEase', delayKey: 'tideLayer2RecedeDelay', durKey: 'tideLayer2RecedeDuration' },
+  },
+  {
+    num: 3, label: 'Layer 3 (lavender wash)',
+    rise: { easeKey: 'tideLayer3Ease', delayKey: 'tideLayer3Delay', durKey: 'tideLayer3Duration' },
+    recede: { easeKey: 'tideLayer3RecedeEase', delayKey: 'tideLayer3RecedeDelay', durKey: 'tideLayer3RecedeDuration' },
+  },
 ] as const;
 
 export function SandboxControls() {
@@ -249,61 +261,17 @@ export function SandboxControls() {
             adjusting any control deviates from prod. Trigger the tide release
             from the Actions section to A/B test. */}
         <Section title="Tide layer easing">
-          {TIDE_LAYERS.map((layer) => {
-            const currentEase = s[layer.easeKey] as import('@/stores/sandbox-store').TideEasing;
-            const isSpring = currentEase === 'spring';
-            return (
-              <div key={layer.num} className="mb-4 pb-4" style={{ borderBottom: '1px solid rgba(49,62,136,0.1)' }}>
-                <Label><strong>{layer.label}</strong></Label>
-                <div className="grid grid-cols-3 gap-1 mb-2">
-                  {TIDE_EASING_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.key}
-                      onClick={() => s.set(layer.easeKey, opt.key)}
-                      className="py-1 rounded text-[10px] font-medium cursor-pointer"
-                      style={{
-                        backgroundColor: currentEase === opt.key ? '#313E88' : 'rgba(49,62,136,0.08)',
-                        color: currentEase === opt.key ? 'white' : '#313E88',
-                      }}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-                <Label>
-                  Delay: <strong>{s[layer.delayKey]}ms</strong>
-                </Label>
-                <input
-                  type="range"
-                  min={0}
-                  max={2000}
-                  step={50}
-                  value={s[layer.delayKey]}
-                  onChange={(e) => s.set(layer.delayKey, Number(e.target.value))}
-                  className="w-full"
-                />
-                {!isSpring && (
-                  <>
-                    <Label>
-                      Duration: <strong>{s[layer.durKey]}ms</strong>
-                    </Label>
-                    <input
-                      type="range"
-                      min={1000}
-                      max={6000}
-                      step={100}
-                      value={s[layer.durKey]}
-                      onChange={(e) => s.set(layer.durKey, Number(e.target.value))}
-                      className="w-full"
-                    />
-                  </>
-                )}
-              </div>
-            );
-          })}
+          {TIDE_LAYERS.map((layer) => (
+            <div key={layer.num} className="mb-4 pb-4" style={{ borderBottom: '1px solid rgba(49,62,136,0.1)' }}>
+              <Label><strong>{layer.label}</strong></Label>
+              <LayerPhaseControls phase="Rise"   layer={layer} sub={layer.rise}   s={s} />
+              <LayerPhaseControls phase="Recede" layer={layer} sub={layer.recede} s={s} />
+            </div>
+          ))}
 
-          {/* Spring physics params — only relevant when any layer uses 'spring' */}
-          {(s.tideLayer1Ease === 'spring' || s.tideLayer2Ease === 'spring' || s.tideLayer3Ease === 'spring') && (
+          {/* Spring physics params — only relevant when any layer uses 'spring' on rise or recede */}
+          {(s.tideLayer1Ease === 'spring' || s.tideLayer2Ease === 'spring' || s.tideLayer3Ease === 'spring' ||
+            s.tideLayer1RecedeEase === 'spring' || s.tideLayer2RecedeEase === 'spring' || s.tideLayer3RecedeEase === 'spring') && (
             <div>
               <Label><strong>Spring physics (any spring layer)</strong></Label>
               <Label>
@@ -417,5 +385,84 @@ function Toggle({
         {note && <span className="block text-[10px] opacity-60">{note}</span>}
       </span>
     </label>
+  );
+}
+
+// Renders the easing picker + delay slider + duration slider for one
+// (layer, phase) pair. Used twice per layer in the "Tide layer easing"
+// section — once for rise, once for recede.
+//
+// Note: SubKeys is typed loosely (string) and the store accesses use `any`
+// casts because the per-layer/phase keys (e.g. 'tideLayer1Ease',
+// 'tideLayer1RecedeEase', etc.) form a finite set we know is valid, but
+// pulling that into a strict type union requires more plumbing than is
+// worth it for the sandbox dev tool.
+type SubKeys = { easeKey: string; delayKey: string; durKey: string };
+type StoreShape = ReturnType<typeof useSandboxStore>;
+function LayerPhaseControls({
+  phase,
+  sub,
+  s,
+}: {
+  phase: 'Rise' | 'Recede';
+  layer: { num: number; label: string };
+  sub: SubKeys;
+  s: StoreShape;
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sAny = s as any;
+  const currentEase = sAny[sub.easeKey] as import('@/stores/sandbox-store').TideEasing;
+  const delayValue = sAny[sub.delayKey] as number;
+  const durValue = sAny[sub.durKey] as number;
+  const isSpring = currentEase === 'spring';
+  return (
+    <div className="mt-2">
+      <Label>
+        <span className="opacity-60 uppercase tracking-wider text-[9px]">{phase}</span>
+      </Label>
+      <div className="grid grid-cols-3 gap-1 mb-2">
+        {TIDE_EASING_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => sAny.set(sub.easeKey, opt.key)}
+            className="py-1 rounded text-[10px] font-medium cursor-pointer"
+            style={{
+              backgroundColor: currentEase === opt.key ? '#313E88' : 'rgba(49,62,136,0.08)',
+              color: currentEase === opt.key ? 'white' : '#313E88',
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <Label>
+        Delay: <strong>{delayValue}ms</strong>
+      </Label>
+      <input
+        type="range"
+        min={0}
+        max={2000}
+        step={50}
+        value={delayValue}
+        onChange={(e) => sAny.set(sub.delayKey, Number(e.target.value))}
+        className="w-full"
+      />
+      {!isSpring && (
+        <>
+          <Label>
+            Duration: <strong>{durValue}ms</strong>
+          </Label>
+          <input
+            type="range"
+            min={1000}
+            max={6000}
+            step={100}
+            value={durValue}
+            onChange={(e) => sAny.set(sub.durKey, Number(e.target.value))}
+            className="w-full"
+          />
+        </>
+      )}
+    </div>
   );
 }

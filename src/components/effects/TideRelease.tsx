@@ -134,6 +134,7 @@ export function TideRelease({
   const peakBob = useSandboxStore((s) => s.tidePeakBobbing);
 
   // FIX-03 §4 (refined) — per-layer easing config (defaults match prod)
+  // Rise phase
   const layer1Ease = useSandboxStore((s) => s.tideLayer1Ease);
   const layer1Delay = useSandboxStore((s) => s.tideLayer1Delay);
   const layer1Duration = useSandboxStore((s) => s.tideLayer1Duration);
@@ -143,6 +144,17 @@ export function TideRelease({
   const layer3Ease = useSandboxStore((s) => s.tideLayer3Ease);
   const layer3Delay = useSandboxStore((s) => s.tideLayer3Delay);
   const layer3Duration = useSandboxStore((s) => s.tideLayer3Duration);
+  // Recede phase
+  const layer1RecedeEase = useSandboxStore((s) => s.tideLayer1RecedeEase);
+  const layer1RecedeDelay = useSandboxStore((s) => s.tideLayer1RecedeDelay);
+  const layer1RecedeDuration = useSandboxStore((s) => s.tideLayer1RecedeDuration);
+  const layer2RecedeEase = useSandboxStore((s) => s.tideLayer2RecedeEase);
+  const layer2RecedeDelay = useSandboxStore((s) => s.tideLayer2RecedeDelay);
+  const layer2RecedeDuration = useSandboxStore((s) => s.tideLayer2RecedeDuration);
+  const layer3RecedeEase = useSandboxStore((s) => s.tideLayer3RecedeEase);
+  const layer3RecedeDelay = useSandboxStore((s) => s.tideLayer3RecedeDelay);
+  const layer3RecedeDuration = useSandboxStore((s) => s.tideLayer3RecedeDuration);
+  // Spring physics (shared between rise and recede)
   const springStiffness = useSandboxStore((s) => s.tideSpringStiffness);
   const springDamping = useSandboxStore((s) => s.tideSpringDamping);
   const springMass = useSandboxStore((s) => s.tideSpringMass);
@@ -263,50 +275,85 @@ export function TideRelease({
   //   - Layer 3 lav:  spring rising (overshoot + settle) → ease-in-out receding
   // ──────────────────────────────────────────────────────────────────────────
 
-  // All easings as cubic-bezier tuples (avoids string-name type widening).
+  // Easings as cubic-bezier tuples (avoids string-name type widening).
+  // Each user-facing 'key' resolves to one curve on rise (the "Out" variant —
+  // visible action happens at the end of motion, e.g. overshoot at peak) and
+  // its mirror on recede (the "In" variant — visible action at the START
+  // of motion, e.g. water gathering before retreating).
   const easeOutDefault: [number, number, number, number] = [0, 0, 0.58, 1];
   const easeInDefault: [number, number, number, number] = [0.42, 0, 1, 1];
   const easeInOut: [number, number, number, number] = [0.42, 0, 0.58, 1];
   const linear: [number, number, number, number] = [0, 0, 1, 1];
   const easeOutBack: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
+  const easeInBack: [number, number, number, number] = [0.36, 0, 0.66, -0.56];
   const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
+  const easeInExpo: [number, number, number, number] = [0.7, 0, 0.84, 0];
   const idleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
-  // Build a rise transition for a layer from its per-layer config.
-  // Receding and idle phases use the original defaults (we're only tuning rise).
+  function curveForRise(ease: TideEasing): [number, number, number, number] {
+    switch (ease) {
+      case 'linear': return linear;
+      case 'inOut':  return easeInOut;
+      case 'back':   return easeOutBack;
+      case 'expo':   return easeOutExpo;
+      case 'out':
+      default:       return easeOutDefault;
+    }
+  }
+  function curveForRecede(ease: TideEasing): [number, number, number, number] {
+    switch (ease) {
+      case 'linear': return linear;
+      case 'inOut':  return easeInOut;
+      case 'back':   return easeInBack;
+      case 'expo':   return easeInExpo;
+      case 'out':
+      default:       return easeInDefault;
+    }
+  }
+
+  // Build a transition for a layer from per-phase config.
   function buildLayerTransition(
-    ease: TideEasing,
-    delayMs: number,
-    durationMs: number,
-    recedeDuration: number,
+    riseEase: TideEasing,
+    riseDelayMs: number,
+    riseDurationMs: number,
+    recedeEase: TideEasing,
+    recedeDelayMs: number,
+    recedeDurationMs: number,
   ): Transition {
     if (reducedMotion) return { duration: 0.5 };
 
     if (phase === 'rising') {
-      if (ease === 'spring') {
+      if (riseEase === 'spring') {
         return {
           type: 'spring',
           stiffness: springStiffness,
           damping: springDamping,
           mass: springMass,
-          delay: delayMs / 1000,
+          delay: riseDelayMs / 1000,
         };
       }
-      const curve =
-        ease === 'linear' ? linear :
-        ease === 'inOut'  ? easeInOut :
-        ease === 'back'   ? easeOutBack :
-        ease === 'expo'   ? easeOutExpo :
-        easeOutDefault; // 'out'
       return {
-        duration: durationMs / 1000,
-        ease: curve,
-        delay: delayMs / 1000,
+        duration: riseDurationMs / 1000,
+        ease: curveForRise(riseEase),
+        delay: riseDelayMs / 1000,
       };
     }
 
     if (isReceding) {
-      return { duration: recedeDuration, ease: easeInDefault };
+      if (recedeEase === 'spring') {
+        return {
+          type: 'spring',
+          stiffness: springStiffness,
+          damping: springDamping,
+          mass: springMass,
+          delay: recedeDelayMs / 1000,
+        };
+      }
+      return {
+        duration: recedeDurationMs / 1000,
+        ease: curveForRecede(recedeEase),
+        delay: recedeDelayMs / 1000,
+      };
     }
 
     return { duration: 0.3, ease: idleEase };
@@ -314,18 +361,14 @@ export function TideRelease({
 
   // Layer 1 — navy
   const layer1Transition: Transition = buildLayerTransition(
-    layer1Ease,
-    layer1Delay,
-    layer1Duration,
-    3.5, // recede duration
+    layer1Ease, layer1Delay, layer1Duration,
+    layer1RecedeEase, layer1RecedeDelay, layer1RecedeDuration,
   );
 
   // Layer 2 — mid purple. Lateral swell adds `x` keyframe during rise only.
   const layer2BaseTransition = buildLayerTransition(
-    layer2Ease,
-    layer2Delay,
-    layer2Duration,
-    3.2,
+    layer2Ease, layer2Delay, layer2Duration,
+    layer2RecedeEase, layer2RecedeDelay, layer2RecedeDuration,
   );
   const layer2Transition: Transition =
     !reducedMotion && lateralSwell && phase === 'rising'
@@ -334,10 +377,8 @@ export function TideRelease({
 
   // Layer 3 — lavender wash
   const layer3Transition: Transition = buildLayerTransition(
-    layer3Ease,
-    layer3Delay,
-    layer3Duration,
-    2.8,
+    layer3Ease, layer3Delay, layer3Duration,
+    layer3RecedeEase, layer3RecedeDelay, layer3RecedeDuration,
   );
 
   // Lateral-swell x-value for layer 2 (only during rise).

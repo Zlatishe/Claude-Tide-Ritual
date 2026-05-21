@@ -55,7 +55,7 @@ interface SandboxState {
   tideFoamStreaks: boolean;
   tidePeakBobbing: boolean;
 
-  // FIX-03 §4 (refined) — Per-layer rise easing, delay, duration.
+  // FIX-03 §4 (refined) — Per-layer RISE easing, delay, duration.
   // Defaults match current prod behavior (uniform ease-out, staggered delays).
   tideLayer1Ease: TideEasing;
   tideLayer1Delay: number;     // ms
@@ -67,7 +67,23 @@ interface SandboxState {
   tideLayer3Delay: number;
   tideLayer3Duration: number;
 
-  // Spring physics params (consumed by any layer with ease === 'spring').
+  // Per-layer RECEDE easing, delay, duration. Separate from rise so the user
+  // can dial in drain timing independently — physically, foam (layer 3) drains
+  // FIRST while the wave body (layer 1) lingers, which is the opposite stagger
+  // from rise. Defaults reflect that: layer 1 has the longest recede + biggest
+  // delay; layer 3 starts immediately with the shortest duration.
+  tideLayer1RecedeEase: TideEasing;
+  tideLayer1RecedeDelay: number;
+  tideLayer1RecedeDuration: number;
+  tideLayer2RecedeEase: TideEasing;
+  tideLayer2RecedeDelay: number;
+  tideLayer2RecedeDuration: number;
+  tideLayer3RecedeEase: TideEasing;
+  tideLayer3RecedeDelay: number;
+  tideLayer3RecedeDuration: number;
+
+  // Spring physics params (consumed by any layer with ease === 'spring',
+  // shared between rise and recede).
   tideSpringStiffness: number;
   tideSpringDamping: number;
   tideSpringMass: number;
@@ -99,7 +115,7 @@ const initial = {
   tideFoamStreaks: false,
   tidePeakBobbing: false,
 
-  // Per-layer easing defaults match production behavior:
+  // RISE defaults match production behavior:
   // - All layers use cubic ease-out.
   // - Layer 1 starts immediately; 2 delays 200ms; 3 delays 400ms.
   // - Durations: 3000 / 3300 / 3500 ms (each successive layer slightly longer).
@@ -112,6 +128,18 @@ const initial = {
   tideLayer3Ease: 'out' as TideEasing,
   tideLayer3Delay: 400,
   tideLayer3Duration: 3500,
+
+  // RECEDE defaults: reverse-staggered so foam (layer 3) drains first.
+  // Layer 1 deepest waits longest then drains slowest (body lingers).
+  tideLayer1RecedeEase: 'out' as TideEasing,
+  tideLayer1RecedeDelay: 400,
+  tideLayer1RecedeDuration: 3500,
+  tideLayer2RecedeEase: 'out' as TideEasing,
+  tideLayer2RecedeDelay: 200,
+  tideLayer2RecedeDuration: 3200,
+  tideLayer3RecedeEase: 'out' as TideEasing,
+  tideLayer3RecedeDelay: 0,
+  tideLayer3RecedeDuration: 2800,
 
   tideSpringStiffness: 60,
   tideSpringDamping: 12,
