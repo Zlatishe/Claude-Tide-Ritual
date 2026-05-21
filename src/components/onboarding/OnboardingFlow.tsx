@@ -137,7 +137,7 @@ export function OnboardingFlow({ onSignIn, isLoading, initialStep = 0 }: Onboard
               {/* Speech bubble — matches "Ready to drift" tag from Shell.tsx */}
               <motion.div className="flex flex-col items-center">
                 <motion.div
-                  className="px-4 py-2 rounded-full font-medium whitespace-nowrap t-support"
+                  className="px-5 py-2.5 rounded-3xl font-medium text-center t-support max-w-[280px] sm:max-w-none sm:whitespace-nowrap sm:rounded-full sm:px-4 sm:py-2"
                   style={{
                     backgroundColor: 'rgba(201,209,255,0.85)',
                     color: 'var(--text-primary-light)',
