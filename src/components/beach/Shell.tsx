@@ -113,6 +113,9 @@ export function Shell({
     return () => cancelAnimationFrame(raf);
   }, [isDragging, id]);
 
+  // Cap stagger so later shells are never stuck mid-entrance when tapped
+  const entranceDelay = Math.min(index * 0.15, 1.2);
+
   return (
     <div
       className="absolute"
@@ -123,6 +126,9 @@ export function Shell({
         height: size,
         transform: 'translate(-50%, -50%)',
         zIndex: isDragging ? 40 : 1,
+        // Pass-through: only the draggable itself captures events,
+        // not transparent corners of the wrapper square
+        pointerEvents: 'none',
       }}
     >
       {/* Drop-in entrance — y translation only, completes and becomes static */}
@@ -133,9 +139,9 @@ export function Shell({
           type: 'spring',
           stiffness: 180,
           damping: 14,
-          delay: index * 0.15,
+          delay: entranceDelay,
         }}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
       >
         {/* Scale entrance — separate from y to avoid drag interference */}
         <motion.div
@@ -145,15 +151,21 @@ export function Shell({
             type: 'spring',
             stiffness: 200,
             damping: 15,
-            delay: index * 0.15,
+            delay: entranceDelay,
           }}
-          style={{ width: '100%', height: '100%', position: 'relative' }}
+          style={{ width: '100%', height: '100%', position: 'relative', pointerEvents: 'none' }}
         >
-          {/* Draggable container — smooth, bounded to viewport */}
+          {/* Draggable container — smooth, bounded to playfield */}
           <motion.div
             ref={draggableRef}
             className="cursor-pointer"
-            style={{ width: '100%', height: '100%', position: 'relative' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              position: 'relative',
+              pointerEvents: 'auto',
+              touchAction: 'none',
+            }}
             role="button"
             tabIndex={0}
             aria-label={isInscribed ? `Shell — ${shellLabel} — Ready to drift` : `Shell — ${shellLabel}`}

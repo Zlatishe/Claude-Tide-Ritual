@@ -11,7 +11,10 @@ export function generateShellPositions(
   containerHeight: number,
 ): ShellPosition[] {
   const positions: ShellPosition[] = [];
-  const minSpacing = Math.min(containerWidth, containerHeight) * (containerWidth < 640 ? 0.18 : 0.13);
+  // FIX-05: increased from 0.18/0.13 — shell size on mobile is ~85px * scale(0.8–1.25)
+  // so max shell footprint is ~106px. 0.26 * 390px = ~101px, which safely clears
+  // most overlaps. Desktop shells are 130px * scale, so 0.18 * 768px = ~138px.
+  const minSpacing = Math.min(containerWidth, containerHeight) * (containerWidth < 640 ? 0.26 : 0.18);
   const xPadding = 0.15; // Keep shells fully visible within viewport
   const yPaddingTop = 0.15; // Ensures ready-to-release tag clears header
   const yPaddingBottom = 0.22; // Above waves & CTA area

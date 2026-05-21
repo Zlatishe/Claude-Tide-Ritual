@@ -136,7 +136,7 @@ export function BeachScene({ onInscribe, onTideRelease }: BeachSceneProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <ShellField onShellClick={handleShellClick} constraintsRef={viewportRef} />
+            <ShellField onShellClick={handleShellClick} />
           </motion.div>
         )}
       </AnimatePresence>

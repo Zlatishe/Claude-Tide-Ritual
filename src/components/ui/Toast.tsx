@@ -38,44 +38,44 @@ export function Toast({ message, onDismiss }: ToastProps) {
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         >
           <div
-            className="px-5 py-4 rounded-xl shadow-lg border flex items-start gap-3"
+            className="relative px-5 py-4 pr-12 rounded-xl shadow-lg border"
             style={{
               backgroundColor: 'rgba(255,255,255,0.92)',
               borderColor: 'rgba(201,209,255,0.4)',
               backdropFilter: 'blur(10px)',
             }}
           >
-            <div className="flex-1 min-w-0">
-              <p
-                className="t-support font-semibold flex items-center"
-                style={{ color: 'var(--text-primary-light)' }}
-              >
-                <svg className="mr-2 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2s2.4 2 5 2c1.3 0 1.9-.5 2.5-1" />
-                  <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2s2.4 2 5 2c1.3 0 1.9-.5 2.5-1" />
-                  <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2s2.4 2 5 2c1.3 0 1.9-.5 2.5-1" />
-                </svg>
-                {message.split('.')[0]}
-              </p>
-              {message.includes('.') && (
-                <p
-                  className="t-caption mt-1"
-                  style={{ color: 'var(--text-secondary-light)' }}
-                >
-                  {message.split('.').slice(1).join('.').trim()}
-                </p>
-              )}
-            </div>
+            {/* Close — absolute top-right, large touch target, icon aligned to title row */}
             <button
               onClick={handleDismissClick}
-              className="flex-shrink-0 w-11 h-11 -mr-2 flex items-center justify-center rounded-full cursor-pointer"
+              className="absolute top-0 right-0 w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
               style={{ color: 'var(--text-caption-light)' }}
               aria-label="Dismiss"
             >
               <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
+
+            <p
+              className="t-support font-semibold flex items-center"
+              style={{ color: 'var(--text-primary-light)' }}
+            >
+              <svg className="mr-2 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2s2.4 2 5 2c1.3 0 1.9-.5 2.5-1" />
+                <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2s2.4 2 5 2c1.3 0 1.9-.5 2.5-1" />
+                <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2s2.4 2 5 2c1.3 0 1.9-.5 2.5-1" />
+              </svg>
+              {message.split('.')[0]}
+            </p>
+            {message.includes('.') && (
+              <p
+                className="t-caption mt-1"
+                style={{ color: 'var(--text-secondary-light)' }}
+              >
+                {message.split('.').slice(1).join('.').trim()}
+              </p>
+            )}
           </div>
         </motion.div>
       )}

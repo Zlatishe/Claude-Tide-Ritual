@@ -1,18 +1,27 @@
 'use client';
 
+import { useRef } from 'react';
 import { Shell } from './Shell';
 import { useBeachStore } from '@/stores/beach-store';
 
 interface ShellFieldProps {
   onShellClick: (shellId: string) => void;
-  constraintsRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export function ShellField({ onShellClick, constraintsRef }: ShellFieldProps) {
+export function ShellField({ onShellClick }: ShellFieldProps) {
   const shells = useBeachStore((s) => s.shells);
 
+  // Playfield ref — shells are draggable only within this box (sand area,
+  // between header bottom and wave top). This prevents shells drifting into
+  // the header where they'd become stuck behind z-30 elements.
+  const playfieldRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="absolute inset-0" style={{ top: '10%', bottom: '22%', zIndex: 2 }}>
+    <div
+      ref={playfieldRef}
+      className="absolute inset-0"
+      style={{ top: '10%', bottom: '22%', zIndex: 2 }}
+    >
       {shells.map((shell, index) => (
         <Shell
           key={shell.id}
@@ -26,7 +35,7 @@ export function ShellField({ onShellClick, constraintsRef }: ShellFieldProps) {
           isInscribed={shell.isInscribed}
           index={index}
           onClick={onShellClick}
-          constraintsRef={constraintsRef}
+          constraintsRef={playfieldRef}
         />
       ))}
     </div>
