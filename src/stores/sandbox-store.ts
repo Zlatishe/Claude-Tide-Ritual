@@ -36,6 +36,14 @@ interface SandboxState {
   controlsOpen: boolean;
   controlsSide: 'left' | 'right';
 
+  // FIX-03 §4 — Tide-release wave experiments (independent toggles, mix & match)
+  tideHarmonicCrests: boolean;     // sine-based crests with secondary harmonic
+  tideStaggeredEasing: boolean;    // per-layer easing variation; spring on lavender
+  tideLateralSwell: boolean;       // mid layer slides in laterally during rise
+  tideCrestMorphing: boolean;      // crest paths cycle through phase snapshots
+  tideFoamStreaks: boolean;        // foam lines drift during peak
+  tidePeakBobbing: boolean;        // micro y-translate during peak
+
   // Setters
   set: <K extends keyof Omit<SandboxState, 'set' | 'reset'>>(
     key: K,
@@ -56,6 +64,12 @@ const initial = {
   hideUIChrome: false,
   controlsOpen: true,
   controlsSide: 'right' as 'left' | 'right',
+  tideHarmonicCrests: false,
+  tideStaggeredEasing: false,
+  tideLateralSwell: false,
+  tideCrestMorphing: false,
+  tideFoamStreaks: false,
+  tidePeakBobbing: false,
 };
 
 export const useSandboxStore = create<SandboxState>((set) => ({

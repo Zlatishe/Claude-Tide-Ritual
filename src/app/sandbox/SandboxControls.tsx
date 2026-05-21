@@ -10,6 +10,29 @@ const SCENES: { value: SandboxScene; label: string }[] = [
   { value: 'signin', label: 'Sign-in' },
 ];
 
+// FIX-03 §4 — Tide-release wave experiments. Each toggle isolates one
+// perceptual primitive applied to the wash-away tide animation (not the
+// ambient home-page waves). Trigger the wash via "Trigger tide release"
+// to A/B compare.
+const TIDE_EXPERIMENTS: {
+  key:
+    | 'tideHarmonicCrests'
+    | 'tideStaggeredEasing'
+    | 'tideLateralSwell'
+    | 'tideCrestMorphing'
+    | 'tideFoamStreaks'
+    | 'tidePeakBobbing';
+  label: string;
+  note: string;
+}[] = [
+  { key: 'tideHarmonicCrests',  label: 'Tide: harmonic crests',  note: '§4a — sine crests + high-freq ripple' },
+  { key: 'tideStaggeredEasing', label: 'Tide: staggered easing', note: '§4b — per-layer easing, spring on lavender' },
+  { key: 'tideLateralSwell',    label: 'Tide: lateral swell',    note: '§4c — mid layer sweeps in from side' },
+  { key: 'tideCrestMorphing',   label: 'Tide: crest morphing',   note: '§4d — needs harmonic; crests shift positions' },
+  { key: 'tideFoamStreaks',     label: 'Tide: foam streaks',     note: '§4e — foam lines drift during peak' },
+  { key: 'tidePeakBobbing',     label: 'Tide: peak bobbing',     note: '§4f — micro-motion at moment of stillness' },
+];
+
 export function SandboxControls() {
   const s = useSandboxStore();
   const shells = useBeachStore((st) => st.shells);
@@ -207,8 +230,21 @@ export function SandboxControls() {
           />
         </Section>
 
-        {/* Design experiments — FIX-01/02 toggles shipped to prod (FIX-03 §2).
-            Reserved for FIX-03 §4 tide-wave experiments next pass. */}
+        {/* FIX-03 §4 — Tide-release wave experiments.
+            Flip toggles, trigger the tide release from the Actions section
+            above, watch the wash-away animation change. Independent toggles:
+            mix and match to find the combination that feels right. */}
+        <Section title="Tide-release experiments">
+          {TIDE_EXPERIMENTS.map((exp) => (
+            <Toggle
+              key={exp.key}
+              label={exp.label}
+              note={exp.note}
+              checked={s[exp.key]}
+              onChange={(v) => s.set(exp.key, v)}
+            />
+          ))}
+        </Section>
 
         {/* Reset */}
         <button
