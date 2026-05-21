@@ -3,7 +3,7 @@
 import { motion, AnimatePresence, type Transition } from 'framer-motion';
 import { useEffect, useState, useMemo } from 'react';
 import { useJarStore } from '@/stores/jar-store';
-import { useSandboxStore } from '@/stores/sandbox-store';
+import { useSandboxStore, type TideEasing } from '@/stores/sandbox-store';
 import { getShellComponent, type ShellVariant } from '@/components/svg/shells';
 import type { ShellColorScheme } from '@/lib/utils/constants';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
@@ -128,11 +128,24 @@ export function TideRelease({
 
   // FIX-03 §4 — tide experiment toggles
   const harmonic = useSandboxStore((s) => s.tideHarmonicCrests);
-  const staggered = useSandboxStore((s) => s.tideStaggeredEasing);
   const lateralSwell = useSandboxStore((s) => s.tideLateralSwell);
   const morphing = useSandboxStore((s) => s.tideCrestMorphing);
   const foam = useSandboxStore((s) => s.tideFoamStreaks);
   const peakBob = useSandboxStore((s) => s.tidePeakBobbing);
+
+  // FIX-03 §4 (refined) — per-layer easing config (defaults match prod)
+  const layer1Ease = useSandboxStore((s) => s.tideLayer1Ease);
+  const layer1Delay = useSandboxStore((s) => s.tideLayer1Delay);
+  const layer1Duration = useSandboxStore((s) => s.tideLayer1Duration);
+  const layer2Ease = useSandboxStore((s) => s.tideLayer2Ease);
+  const layer2Delay = useSandboxStore((s) => s.tideLayer2Delay);
+  const layer2Duration = useSandboxStore((s) => s.tideLayer2Duration);
+  const layer3Ease = useSandboxStore((s) => s.tideLayer3Ease);
+  const layer3Delay = useSandboxStore((s) => s.tideLayer3Delay);
+  const layer3Duration = useSandboxStore((s) => s.tideLayer3Duration);
+  const springStiffness = useSandboxStore((s) => s.tideSpringStiffness);
+  const springDamping = useSandboxStore((s) => s.tideSpringDamping);
+  const springMass = useSandboxStore((s) => s.tideSpringMass);
 
   // Capture viewport width for lateral-swell calculation
   useEffect(() => {
@@ -250,59 +263,82 @@ export function TideRelease({
   //   - Layer 3 lav:  spring rising (overshoot + settle) → ease-in-out receding
   // ──────────────────────────────────────────────────────────────────────────
 
-  // All easings as cubic-bezier tuples (avoids type widening of string names).
+  // All easings as cubic-bezier tuples (avoids string-name type widening).
   const easeOutDefault: [number, number, number, number] = [0, 0, 0.58, 1];
   const easeInDefault: [number, number, number, number] = [0.42, 0, 1, 1];
   const easeInOut: [number, number, number, number] = [0.42, 0, 0.58, 1];
-  const easeOutSharp: [number, number, number, number] = [0, 0, 0.2, 1];
   const linear: [number, number, number, number] = [0, 0, 1, 1];
+  const easeOutBack: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
+  const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
   const idleEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
-  // Layer 1 — navy
-  const layer1Transition: Transition = reducedMotion
-    ? { duration: 0.5 }
-    : {
-        duration: phase === 'rising' ? 3.0 : isReceding ? 3.5 : 0.3,
-        ease: phase === 'rising' ? easeOutDefault : isReceding ? easeInDefault : idleEase,
+  // Build a rise transition for a layer from its per-layer config.
+  // Receding and idle phases use the original defaults (we're only tuning rise).
+  function buildLayerTransition(
+    ease: TideEasing,
+    delayMs: number,
+    durationMs: number,
+    recedeDuration: number,
+  ): Transition {
+    if (reducedMotion) return { duration: 0.5 };
+
+    if (phase === 'rising') {
+      if (ease === 'spring') {
+        return {
+          type: 'spring',
+          stiffness: springStiffness,
+          damping: springDamping,
+          mass: springMass,
+          delay: delayMs / 1000,
+        };
+      }
+      const curve =
+        ease === 'linear' ? linear :
+        ease === 'inOut'  ? easeInOut :
+        ease === 'back'   ? easeOutBack :
+        ease === 'expo'   ? easeOutExpo :
+        easeOutDefault; // 'out'
+      return {
+        duration: durationMs / 1000,
+        ease: curve,
+        delay: delayMs / 1000,
       };
+    }
+
+    if (isReceding) {
+      return { duration: recedeDuration, ease: easeInDefault };
+    }
+
+    return { duration: 0.3, ease: idleEase };
+  }
+
+  // Layer 1 — navy
+  const layer1Transition: Transition = buildLayerTransition(
+    layer1Ease,
+    layer1Delay,
+    layer1Duration,
+    3.5, // recede duration
+  );
 
   // Layer 2 — mid purple. Lateral swell adds `x` keyframe during rise only.
-  const layer2RiseDuration = 3.3;
-  const layer2Transition: Transition = reducedMotion
-    ? { duration: 0.5 }
-    : staggered
-    ? {
-        duration: phase === 'rising' ? layer2RiseDuration : isReceding ? 3.2 : 0.3,
-        ease: phase === 'rising' ? easeOutSharp : isReceding ? linear : idleEase,
-        delay: phase === 'rising' ? 0.2 : 0,
-        ...(lateralSwell && phase === 'rising'
-          ? { x: { duration: 1.0, ease: easeOutDefault } }
-          : {}),
-      }
-    : {
-        duration: phase === 'rising' ? layer2RiseDuration : isReceding ? 3.2 : 0.3,
-        ease: phase === 'rising' ? easeOutDefault : isReceding ? easeInDefault : idleEase,
-        delay: phase === 'rising' ? 0.2 : 0,
-        ...(lateralSwell && phase === 'rising'
-          ? { x: { duration: 1.0, ease: easeOutDefault } }
-          : {}),
-      };
+  const layer2BaseTransition = buildLayerTransition(
+    layer2Ease,
+    layer2Delay,
+    layer2Duration,
+    3.2,
+  );
+  const layer2Transition: Transition =
+    !reducedMotion && lateralSwell && phase === 'rising'
+      ? { ...layer2BaseTransition, x: { duration: 1.0, ease: easeOutDefault } }
+      : layer2BaseTransition;
 
-  // Layer 3 — lavender wash. When staggered, rise uses a spring (overshoot).
-  // Framer ignores `duration` on type: 'spring' — physics determines timing.
-  const layer3Transition: Transition = reducedMotion
-    ? { duration: 0.5 }
-    : staggered
-    ? phase === 'rising'
-      ? { type: 'spring', stiffness: 60, damping: 12, mass: 1.4, delay: 0.4 }
-      : isReceding
-      ? { duration: 2.8, ease: [0.4, 0, 0.2, 1] }
-      : { duration: 0.3, ease: idleEase }
-    : {
-        duration: phase === 'rising' ? 3.5 : isReceding ? 2.8 : 0.3,
-        ease: phase === 'rising' ? easeOutDefault : isReceding ? easeInDefault : idleEase,
-        delay: phase === 'rising' ? 0.4 : 0,
-      };
+  // Layer 3 — lavender wash
+  const layer3Transition: Transition = buildLayerTransition(
+    layer3Ease,
+    layer3Delay,
+    layer3Duration,
+    2.8,
+  );
 
   // Lateral-swell x-value for layer 2 (only during rise).
   const layer2X = !reducedMotion && lateralSwell && phase === 'rising'

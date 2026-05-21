@@ -17,7 +17,6 @@ const SCENES: { value: SandboxScene; label: string }[] = [
 const TIDE_EXPERIMENTS: {
   key:
     | 'tideHarmonicCrests'
-    | 'tideStaggeredEasing'
     | 'tideLateralSwell'
     | 'tideCrestMorphing'
     | 'tideFoamStreaks'
@@ -26,12 +25,26 @@ const TIDE_EXPERIMENTS: {
   note: string;
 }[] = [
   { key: 'tideHarmonicCrests',  label: 'Tide: harmonic crests',  note: '§4a — sine crests + high-freq ripple' },
-  { key: 'tideStaggeredEasing', label: 'Tide: staggered easing', note: '§4b — per-layer easing, spring on lavender' },
   { key: 'tideLateralSwell',    label: 'Tide: lateral swell',    note: '§4c — mid layer sweeps in from side' },
   { key: 'tideCrestMorphing',   label: 'Tide: crest morphing',   note: '§4d — needs harmonic; crests shift positions' },
   { key: 'tideFoamStreaks',     label: 'Tide: foam streaks',     note: '§4e — foam lines drift during peak' },
   { key: 'tidePeakBobbing',     label: 'Tide: peak bobbing',     note: '§4f — micro-motion at moment of stillness' },
 ];
+
+const TIDE_EASING_OPTIONS: { key: import('@/stores/sandbox-store').TideEasing; label: string }[] = [
+  { key: 'out',    label: 'out'    },
+  { key: 'linear', label: 'linear' },
+  { key: 'inOut',  label: 'in/out' },
+  { key: 'back',   label: 'back'   },
+  { key: 'expo',   label: 'expo'   },
+  { key: 'spring', label: 'spring' },
+];
+
+const TIDE_LAYERS = [
+  { num: 1, label: 'Layer 1 (navy body)',     easeKey: 'tideLayer1Ease',     delayKey: 'tideLayer1Delay',     durKey: 'tideLayer1Duration' },
+  { num: 2, label: 'Layer 2 (mid purple)',    easeKey: 'tideLayer2Ease',     delayKey: 'tideLayer2Delay',     durKey: 'tideLayer2Duration' },
+  { num: 3, label: 'Layer 3 (lavender wash)', easeKey: 'tideLayer3Ease',     delayKey: 'tideLayer3Delay',     durKey: 'tideLayer3Duration' },
+] as const;
 
 export function SandboxControls() {
   const s = useSandboxStore();
@@ -230,10 +243,113 @@ export function SandboxControls() {
           />
         </Section>
 
-        {/* FIX-03 §4 — Tide-release wave experiments.
-            Flip toggles, trigger the tide release from the Actions section
-            above, watch the wash-away animation change. Independent toggles:
-            mix and match to find the combination that feels right. */}
+        {/* FIX-03 §4 (refined) — Per-layer rise easing for the tide release.
+            Each layer can use a different easing curve, delay, and duration.
+            Defaults match prod behavior (uniform ease-out, staggered delays);
+            adjusting any control deviates from prod. Trigger the tide release
+            from the Actions section to A/B test. */}
+        <Section title="Tide layer easing">
+          {TIDE_LAYERS.map((layer) => {
+            const currentEase = s[layer.easeKey] as import('@/stores/sandbox-store').TideEasing;
+            const isSpring = currentEase === 'spring';
+            return (
+              <div key={layer.num} className="mb-4 pb-4" style={{ borderBottom: '1px solid rgba(49,62,136,0.1)' }}>
+                <Label><strong>{layer.label}</strong></Label>
+                <div className="grid grid-cols-3 gap-1 mb-2">
+                  {TIDE_EASING_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => s.set(layer.easeKey, opt.key)}
+                      className="py-1 rounded text-[10px] font-medium cursor-pointer"
+                      style={{
+                        backgroundColor: currentEase === opt.key ? '#313E88' : 'rgba(49,62,136,0.08)',
+                        color: currentEase === opt.key ? 'white' : '#313E88',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <Label>
+                  Delay: <strong>{s[layer.delayKey]}ms</strong>
+                </Label>
+                <input
+                  type="range"
+                  min={0}
+                  max={2000}
+                  step={50}
+                  value={s[layer.delayKey]}
+                  onChange={(e) => s.set(layer.delayKey, Number(e.target.value))}
+                  className="w-full"
+                />
+                {!isSpring && (
+                  <>
+                    <Label>
+                      Duration: <strong>{s[layer.durKey]}ms</strong>
+                    </Label>
+                    <input
+                      type="range"
+                      min={1000}
+                      max={6000}
+                      step={100}
+                      value={s[layer.durKey]}
+                      onChange={(e) => s.set(layer.durKey, Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Spring physics params — only relevant when any layer uses 'spring' */}
+          {(s.tideLayer1Ease === 'spring' || s.tideLayer2Ease === 'spring' || s.tideLayer3Ease === 'spring') && (
+            <div>
+              <Label><strong>Spring physics (any spring layer)</strong></Label>
+              <Label>
+                Stiffness: <strong>{s.tideSpringStiffness}</strong>
+                <span className="opacity-60"> (lower = slower)</span>
+              </Label>
+              <input
+                type="range"
+                min={20}
+                max={200}
+                step={5}
+                value={s.tideSpringStiffness}
+                onChange={(e) => s.set('tideSpringStiffness', Number(e.target.value))}
+                className="w-full"
+              />
+              <Label>
+                Damping: <strong>{s.tideSpringDamping}</strong>
+                <span className="opacity-60"> (higher = less bounce)</span>
+              </Label>
+              <input
+                type="range"
+                min={1}
+                max={40}
+                step={1}
+                value={s.tideSpringDamping}
+                onChange={(e) => s.set('tideSpringDamping', Number(e.target.value))}
+                className="w-full"
+              />
+              <Label>
+                Mass: <strong>{s.tideSpringMass.toFixed(1)}</strong>
+                <span className="opacity-60"> (higher = slower, more inertia)</span>
+              </Label>
+              <input
+                type="range"
+                min={0.5}
+                max={4}
+                step={0.1}
+                value={s.tideSpringMass}
+                onChange={(e) => s.set('tideSpringMass', Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          )}
+        </Section>
+
+        {/* FIX-03 §4 — Other tide-release wave experiments (independent of easing) */}
         <Section title="Tide-release experiments">
           {TIDE_EXPERIMENTS.map((exp) => (
             <Toggle
