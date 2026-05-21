@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Transition } from 'framer-motion';
 import { useEffect, useState, useMemo } from 'react';
 import { useJarStore } from '@/stores/jar-store';
 import { getShellComponent, type ShellVariant } from '@/components/svg/shells';
@@ -18,6 +18,49 @@ interface TideReleaseProps {
   shellVariant?: ShellVariant;
   shellColorScheme?: ShellColorScheme;
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Per-layer easing locked in after the sandbox experiments (FIX-03 §4).
+//
+// All three layers use a cubic 'back' curve — soft overshoot bounded by
+// duration. On rise the overshoot is at the peak (wave swells slightly past
+// target then settles). On recede the overshoot is at the start (water
+// "gathers up" briefly before retreating). The asymmetric stagger between
+// the two phases (foam dissipates fastest on recede, body lingers longest)
+// gives the wash a physical feel without spring oscillation.
+//
+// Cubic-bezier reference:
+//   easeOutBack: y1 > 1 → overshoot at end of motion
+//   easeInBack:  y1 < 0 → "anticipation" at start of motion
+// ────────────────────────────────────────────────────────────────────────────
+
+const easeOutBack: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
+const easeInBack:  [number, number, number, number] = [0.36, 0, 0.66, -0.56];
+const idleEase:    [number, number, number, number] = [0.25, 0.1, 0.25, 1];
+
+interface PhaseConfig {
+  ease: [number, number, number, number];
+  delay: number;     // seconds
+  duration: number;  // seconds
+}
+
+interface LayerConfig {
+  rise: PhaseConfig;
+  recede: PhaseConfig;
+}
+
+const LAYER_1: LayerConfig = {
+  rise:   { ease: easeOutBack, delay: 0.1, duration: 3.0 },
+  recede: { ease: easeInBack,  delay: 0.4, duration: 3.5 },
+};
+const LAYER_2: LayerConfig = {
+  rise:   { ease: easeOutBack, delay: 0.2, duration: 3.3 },
+  recede: { ease: easeInBack,  delay: 0.2, duration: 3.2 },
+};
+const LAYER_3: LayerConfig = {
+  rise:   { ease: easeOutBack, delay: 0.35, duration: 3.5 },
+  recede: { ease: easeInBack,  delay: 0,    duration: 2.8 },
+};
 
 export function TideRelease({
   isActive,
@@ -99,6 +142,14 @@ export function TideRelease({
   const isUp = phase === 'rising' || phase === 'peak';
   const isReceding = phase === 'receding' || phase === 'stones' || phase === 'toast';
 
+  // Build the transition for one layer based on the current phase.
+  function buildTransition(cfg: LayerConfig): Transition {
+    if (reducedMotion) return { duration: 0.5 };
+    if (phase === 'rising')   return { duration: cfg.rise.duration,   ease: cfg.rise.ease,   delay: cfg.rise.delay };
+    if (isReceding)            return { duration: cfg.recede.duration, ease: cfg.recede.ease, delay: cfg.recede.delay };
+    return { duration: 0.3, ease: idleEase };
+  }
+
   return (
     <AnimatePresence>
       {phase !== 'idle' && (
@@ -109,16 +160,13 @@ export function TideRelease({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Wave layer 1 — deepest navy, rises first */}
+          {/* Wave layer 1 — deepest navy, the body */}
           <motion.div
             className="absolute bottom-0 left-0 w-full"
             style={{ backgroundColor: '#292E64' }}
             initial={{ height: '0%' }}
             animate={reducedMotion ? { opacity: isUp ? 1 : 0, height: '100%' } : { height: isUp ? '100%' : '0%' }}
-            transition={reducedMotion ? { duration: 0.5 } : {
-              duration: phase === 'rising' ? 3.0 : isReceding ? 3.5 : 0.3,
-              ease: phase === 'rising' ? [0, 0, 0.58, 1] : isReceding ? [0.42, 0, 1, 1] : [0.25, 0.1, 0.25, 1],
-            }}
+            transition={buildTransition(LAYER_1)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -139,11 +187,7 @@ export function TideRelease({
             style={{ backgroundColor: '#3D4690' }}
             initial={{ height: '0%' }}
             animate={reducedMotion ? { opacity: isUp ? 1 : 0, height: '85%' } : { height: isUp ? '85%' : '0%' }}
-            transition={reducedMotion ? { duration: 0.5 } : {
-              duration: phase === 'rising' ? 3.3 : isReceding ? 3.2 : 0.3,
-              ease: phase === 'rising' ? [0, 0, 0.58, 1] : isReceding ? [0.42, 0, 1, 1] : [0.25, 0.1, 0.25, 1],
-              delay: phase === 'rising' ? 0.2 : 0,
-            }}
+            transition={buildTransition(LAYER_2)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -158,17 +202,13 @@ export function TideRelease({
             </svg>
           </motion.div>
 
-          {/* Wave layer 3 — lavender wash */}
+          {/* Wave layer 3 — lavender wash (foam) */}
           <motion.div
             className="absolute bottom-0 left-0 w-full"
             style={{ backgroundColor: 'rgba(201,209,255,0.15)' }}
             initial={{ height: '0%' }}
             animate={reducedMotion ? { opacity: isUp ? 1 : 0, height: '70%' } : { height: isUp ? '70%' : '0%' }}
-            transition={reducedMotion ? { duration: 0.5 } : {
-              duration: phase === 'rising' ? 3.5 : isReceding ? 2.8 : 0.3,
-              ease: phase === 'rising' ? [0, 0, 0.58, 1] : isReceding ? [0.42, 0, 1, 1] : [0.25, 0.1, 0.25, 1],
-              delay: phase === 'rising' ? 0.4 : 0,
-            }}
+            transition={buildTransition(LAYER_3)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -183,7 +223,7 @@ export function TideRelease({
             </svg>
           </motion.div>
 
-          {/* Floating shell + Breathe out text — shown together at peak (screen fully covered) */}
+          {/* Floating shell + Breathe out text — shown at peak (screen covered) */}
           {phase === 'peak' && (
             <motion.div
               className="absolute inset-0 flex flex-col items-center justify-center"
@@ -210,7 +250,7 @@ export function TideRelease({
 
               {/* Breathe out text */}
               <motion.p
-                className="text-3xl md:text-4xl font-bold"
+                className="t-h1"
                 style={{ color: '#C9D1FF' }}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -219,8 +259,8 @@ export function TideRelease({
                 Breathe out
               </motion.p>
               <motion.p
-                className="mt-3 font-normal"
-                style={{ color: 'rgba(201,209,255,0.7)', fontSize: 16 }}
+                className="t-support mt-2"
+                style={{ color: 'var(--text-secondary-dark)' }}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}

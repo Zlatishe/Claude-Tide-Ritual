@@ -37,17 +37,10 @@ export function SignInScreen({ onSignIn, isLoading, privacyText }: SignInScreenP
           />
         </svg>
 
-        <h1
-          className="text-3xl md:text-5xl font-bold mb-2"
-          style={{ color: '#313E88' }}
-        >
+        <h1 className="t-h1 mb-2" style={{ color: 'var(--text-primary-light)' }}>
           The Tide&apos;s Gift
         </h1>
-
-        <p
-          className="font-normal mb-15"
-          style={{ color: '#313E88', opacity: 0.5, fontSize: 'clamp(16px, 2vw, 18px)' }}
-        >
+        <p className="t-support mb-16" style={{ color: 'var(--text-secondary-light)' }}>
           A ritual for letting go
         </p>
 
@@ -65,10 +58,7 @@ export function SignInScreen({ onSignIn, isLoading, privacyText }: SignInScreenP
           {isLoading ? 'Loading...' : 'Sign in with Google'}
         </motion.button>
 
-        <p
-          className="mt-6 font-light"
-          style={{ color: '#656980', fontSize: 14 }}
-        >
+        <p className="t-caption mt-6" style={{ color: 'var(--text-caption-light)' }}>
           {privacyText || 'Your thoughts are private and only visible to you'}
         </p>
       </motion.div>

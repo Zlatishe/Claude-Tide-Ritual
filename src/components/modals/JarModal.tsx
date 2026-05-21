@@ -137,23 +137,28 @@ export function JarModal({ isOpen, onClose }: JarModalProps) {
               <div className="text-center md:text-left px-4">
                 {stoneCount === 0 ? (
                   <>
-                    <p id="jar-heading" className="font-medium" style={{ color: 'white', fontSize: 'clamp(24px, 4vw, 48px)' }}>
+                    <p id="jar-heading" className="t-h2" style={{ color: 'var(--text-primary-dark)' }}>
                       The Treasure Jar
                     </p>
-                    <p className="font-normal mt-3" style={{ color: 'rgba(201,209,255,0.6)', fontSize: 16 }}>
+                    <p className="t-support mt-2" style={{ color: 'var(--text-secondary-dark)' }}>
                       The tide brings gifts
                     </p>
                   </>
                 ) : (
                   <>
-                    <p style={{ color: 'white' }}>
-                      <span className="text-5xl md:text-6xl font-bold">{stoneCount}</span>
+                    {/* Stone count — hero numeral */}
+                    <p style={{ color: 'var(--text-primary-dark)' }}>
+                      <span className="t-hero">{stoneCount}</span>
                     </p>
-                    <p id="jar-heading" className="font-medium mt-1" style={{ color: 'white', fontSize: 'clamp(20px, 4vw, 48px)' }}>
+                    {/* Heading — peers with InscriptionModal heading at t-h2 */}
+                    <p id="jar-heading" className="t-h2 mt-1" style={{ color: 'var(--text-primary-dark)' }}>
                       Thought{stoneCount > 1 ? 's' : ''} released to the tide
                     </p>
-                    <p className="font-normal mt-3" style={{ color: 'rgba(201,209,255,0.6)', fontSize: 16 }}>
-                      Each piece holds a moment you chose to let go
+                    {/* Support — always a couplet on its own two lines */}
+                    <p className="t-support mt-2" style={{ color: 'var(--text-secondary-dark)' }}>
+                      Each piece holds a moment
+                      <br />
+                      you chose to let go
                     </p>
                   </>
                 )}

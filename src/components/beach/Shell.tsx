@@ -264,11 +264,10 @@ export function Shell({
                 style={{ bottom: '100%', marginBottom: 4 }}
               >
                 <motion.span
-                  className="px-4 py-1.5 rounded-full font-medium whitespace-nowrap"
+                  className="px-4 py-2 rounded-full font-medium whitespace-nowrap t-support"
                   style={{
-                    fontSize: 14,
                     backgroundColor: 'rgba(201,209,255,0.85)',
-                    color: '#313E88',
+                    color: 'var(--text-primary-light)',
                   }}
                   initial={{ opacity: 0, y: 8, scale: 0.85 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -282,7 +281,7 @@ export function Shell({
                     width: 0,
                     height: 12,
                     borderLeft: '1.5px dashed rgba(49,62,136,0.3)',
-                    marginTop: 3,
+                    marginTop: 4,
                   }}
                 />
               </div>

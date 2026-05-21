@@ -25,9 +25,7 @@ export function CallTideButton({ visible, onClick }: CallTideButtonProps) {
               backgroundColor: '#E49C75',
               color: '#292E64',
             }}
-            whileHover={{
-              scale: 1.05,
-            }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.96 }}
             onClick={onClick}
           >

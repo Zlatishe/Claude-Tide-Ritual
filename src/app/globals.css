@@ -10,6 +10,53 @@
   --wave-height: clamp(120px, 18vh, 180px);
   --content-bottom: clamp(170px, 24vh, 240px);
   --toast-bottom: clamp(240px, 34vh, 320px);
+
+  /* Typography roles — light surfaces (sand, cream). */
+  --text-primary-light: #313E88;
+  --text-secondary-light: rgba(49, 62, 136, 0.55);
+  --text-caption-light: rgba(49, 62, 136, 0.45);
+  /* Typography roles — dark surfaces (navy modal, tide-rise overlay). */
+  --text-primary-dark: #FFFFFF;
+  --text-secondary-dark: rgba(201, 209, 255, 0.65);
+  --text-caption-dark: rgba(201, 209, 255, 0.5);
+
+  /* FIX-03 §2c — Strict 8-pt grid type scale.
+     Every endpoint is a multiple of 4 (most are multiples of 8). No 14/15
+     tier — small-text differentiation comes from weight/color/leading, not
+     size. See DESIGN_SYSTEM.md for the picking-a-class table. */
+  --fs-caption: 12px;                     /* Footnote, char counter, micro-label */
+  --fs-support: 16px;                     /* Support line, kicker, label */
+  --fs-body:    clamp(16px, 1.5vw, 20px); /* Paragraph, input text */
+  --fs-h3:      clamp(20px, 2vw, 24px);   /* Sub-heading */
+  --fs-h2:      clamp(24px, 3vw, 32px);   /* Modal heading, section heading */
+  --fs-h1:      clamp(32px, 4vw, 40px);   /* Page-level heading */
+  --fs-hero:    clamp(48px, 6vw, 64px);   /* Hero numerals (stone count) */
+  /* Unitless line-height ratios. */
+  --lh-tight:   1.2;  /* Headings */
+  --lh-snug:    1.4;  /* Support, kicker */
+  --lh-relaxed: 1.6;  /* Body */
+}
+
+/* FIX-01 §1 — Type-role utility classes. */
+.t-h1 { font-size: var(--fs-h1); font-weight: 700; line-height: var(--lh-tight); }
+.t-h2 { font-size: var(--fs-h2); font-weight: 600; line-height: var(--lh-tight); }
+.t-h3 { font-size: var(--fs-h3); font-weight: 600; line-height: var(--lh-tight); }
+.t-body { font-size: var(--fs-body); font-weight: 400; line-height: var(--lh-relaxed); }
+.t-support { font-size: var(--fs-support); font-weight: 400; line-height: var(--lh-snug); }
+.t-caption { font-size: var(--fs-caption); font-weight: 400; line-height: var(--lh-snug); }
+/* FIX-02 §3 — Hero numeral (stone count). */
+.t-hero { font-size: var(--fs-hero); font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+
+/* FIX-02 §2 — Secondary placeholder treatment.
+   Add .placeholder-secondary to any textarea/input to make its placeholder
+   smaller and lighter than the user's typed text. The input's own font-size
+   stays at --fs-body (≥16px) to prevent iOS Safari from auto-zooming on focus.
+   ::placeholder targets the hint string only — typed text is unaffected. */
+.placeholder-secondary::placeholder {
+  font-size: var(--fs-support);
+  color: var(--text-secondary-light);
+  font-weight: 400;
+  opacity: 1; /* Firefox defaults placeholder opacity to 0.54 — normalize */
 }
 
 @theme inline {

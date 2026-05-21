@@ -5,8 +5,6 @@ export const PALETTE = {
   navy: '#313E88',
   navyDark: '#292E64',
   navyMid: '#323F86',
-  warmBrown: '#A35930',
-  muted: '#656980',
   jarShadow: '#4358A1',
   jarHighlight: '#F6F6F3',
 } as const;
