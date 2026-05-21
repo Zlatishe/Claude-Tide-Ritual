@@ -7,6 +7,13 @@ import { getShellComponent, type ShellVariant } from '@/components/svg/shells';
 import type { ShellColorScheme } from '@/lib/utils/constants';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
 import { useSound } from '@/lib/hooks/use-sound';
+import {
+  TIDE_LAYER_1,
+  TIDE_LAYER_2,
+  TIDE_LAYER_3,
+  idleEase,
+  type LayerConfig,
+} from '@/lib/utils/tide-easing';
 
 type TidePhase = 'idle' | 'rising' | 'peak' | 'receding' | 'stones' | 'toast';
 
@@ -19,48 +26,8 @@ interface TideReleaseProps {
   shellColorScheme?: ShellColorScheme;
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Per-layer easing locked in after the sandbox experiments (FIX-03 §4).
-//
-// All three layers use a cubic 'back' curve — soft overshoot bounded by
-// duration. On rise the overshoot is at the peak (wave swells slightly past
-// target then settles). On recede the overshoot is at the start (water
-// "gathers up" briefly before retreating). The asymmetric stagger between
-// the two phases (foam dissipates fastest on recede, body lingers longest)
-// gives the wash a physical feel without spring oscillation.
-//
-// Cubic-bezier reference:
-//   easeOutBack: y1 > 1 → overshoot at end of motion
-//   easeInBack:  y1 < 0 → "anticipation" at start of motion
-// ────────────────────────────────────────────────────────────────────────────
-
-const easeOutBack: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
-const easeInBack:  [number, number, number, number] = [0.36, 0, 0.66, -0.56];
-const idleEase:    [number, number, number, number] = [0.25, 0.1, 0.25, 1];
-
-interface PhaseConfig {
-  ease: [number, number, number, number];
-  delay: number;     // seconds
-  duration: number;  // seconds
-}
-
-interface LayerConfig {
-  rise: PhaseConfig;
-  recede: PhaseConfig;
-}
-
-const LAYER_1: LayerConfig = {
-  rise:   { ease: easeOutBack, delay: 0.1, duration: 3.0 },
-  recede: { ease: easeInBack,  delay: 0.4, duration: 3.5 },
-};
-const LAYER_2: LayerConfig = {
-  rise:   { ease: easeOutBack, delay: 0.2, duration: 3.3 },
-  recede: { ease: easeInBack,  delay: 0.2, duration: 3.2 },
-};
-const LAYER_3: LayerConfig = {
-  rise:   { ease: easeOutBack, delay: 0.35, duration: 3.5 },
-  recede: { ease: easeInBack,  delay: 0,    duration: 2.8 },
-};
+// Per-layer easing lives in @/lib/utils/tide-easing (shared with WaveSweep so
+// the onboarding wash and the production wash stay in sync).
 
 export function TideRelease({
   isActive,
@@ -166,7 +133,7 @@ export function TideRelease({
             style={{ backgroundColor: '#292E64' }}
             initial={{ height: '0%' }}
             animate={reducedMotion ? { opacity: isUp ? 1 : 0, height: '100%' } : { height: isUp ? '100%' : '0%' }}
-            transition={buildTransition(LAYER_1)}
+            transition={buildTransition(TIDE_LAYER_1)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -187,7 +154,7 @@ export function TideRelease({
             style={{ backgroundColor: '#3D4690' }}
             initial={{ height: '0%' }}
             animate={reducedMotion ? { opacity: isUp ? 1 : 0, height: '85%' } : { height: isUp ? '85%' : '0%' }}
-            transition={buildTransition(LAYER_2)}
+            transition={buildTransition(TIDE_LAYER_2)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -208,7 +175,7 @@ export function TideRelease({
             style={{ backgroundColor: 'rgba(201,209,255,0.15)' }}
             initial={{ height: '0%' }}
             animate={reducedMotion ? { opacity: isUp ? 1 : 0, height: '70%' } : { height: isUp ? '70%' : '0%' }}
-            transition={buildTransition(LAYER_3)}
+            transition={buildTransition(TIDE_LAYER_3)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -217,7 +184,7 @@ export function TideRelease({
               style={{ height: 50, transform: 'translateY(-100%)' }}
             >
               <path
-                d="M0 50 Q 180 15, 360 35 Q 540 50, 720 20 Q 900 5, 1080 30 Q 1260 50, 1440 25 L1440 50 Z"
+                d="M0 50 Q 240 22, 480 40 Q 720 52, 960 32 Q 1200 18, 1440 36 L1440 50 Z"
                 fill="rgba(201,209,255,0.15)"
               />
             </svg>

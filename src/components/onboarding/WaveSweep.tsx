@@ -1,9 +1,16 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Transition } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
 import { useSound } from '@/lib/hooks/use-sound';
+import {
+  TIDE_LAYER_1,
+  TIDE_LAYER_2,
+  TIDE_LAYER_3,
+  idleEase,
+  type LayerConfig,
+} from '@/lib/utils/tide-easing';
 
 type SweepPhase = 'idle' | 'rising' | 'peak' | 'receding';
 
@@ -47,6 +54,13 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
   const isUp = phase === 'rising' || phase === 'peak';
   const isReceding = phase === 'receding';
 
+  function buildTransition(cfg: LayerConfig): Transition {
+    if (reducedMotion) return { duration: 0.5 };
+    if (phase === 'rising')  return { duration: cfg.rise.duration,   ease: cfg.rise.ease,   delay: cfg.rise.delay };
+    if (isReceding)          return { duration: cfg.recede.duration, ease: cfg.recede.ease, delay: cfg.recede.delay };
+    return { duration: 0.3, ease: idleEase };
+  }
+
   return (
     <AnimatePresence>
       {phase !== 'idle' && (
@@ -68,19 +82,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
                 ? { opacity: isUp ? 1 : 0, height: '100%' }
                 : { height: isUp ? '100%' : '0%' }
             }
-            transition={
-              reducedMotion
-                ? { duration: 0.5 }
-                : {
-                    duration: phase === 'rising' ? 3.0 : isReceding ? 3.5 : 0.3,
-                    ease:
-                      phase === 'rising'
-                        ? [0, 0, 0.58, 1]
-                        : isReceding
-                          ? [0.42, 0, 1, 1]
-                          : [0.25, 0.1, 0.25, 1],
-                  }
-            }
+            transition={buildTransition(TIDE_LAYER_1)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -105,20 +107,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
                 ? { opacity: isUp ? 1 : 0, height: '85%' }
                 : { height: isUp ? '85%' : '0%' }
             }
-            transition={
-              reducedMotion
-                ? { duration: 0.5 }
-                : {
-                    duration: phase === 'rising' ? 3.3 : isReceding ? 3.2 : 0.3,
-                    ease:
-                      phase === 'rising'
-                        ? [0, 0, 0.58, 1]
-                        : isReceding
-                          ? [0.42, 0, 1, 1]
-                          : [0.25, 0.1, 0.25, 1],
-                    delay: phase === 'rising' ? 0.2 : 0,
-                  }
-            }
+            transition={buildTransition(TIDE_LAYER_2)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -133,7 +122,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
             </svg>
           </motion.div>
 
-          {/* Wave layer 3 — lavender wash */}
+          {/* Wave layer 3 — lavender wash (foam) */}
           <motion.div
             className="absolute bottom-0 left-0 w-full"
             style={{ backgroundColor: 'rgba(201,209,255,0.15)' }}
@@ -143,20 +132,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
                 ? { opacity: isUp ? 1 : 0, height: '70%' }
                 : { height: isUp ? '70%' : '0%' }
             }
-            transition={
-              reducedMotion
-                ? { duration: 0.5 }
-                : {
-                    duration: phase === 'rising' ? 3.5 : isReceding ? 2.8 : 0.3,
-                    ease:
-                      phase === 'rising'
-                        ? [0, 0, 0.58, 1]
-                        : isReceding
-                          ? [0.42, 0, 1, 1]
-                          : [0.25, 0.1, 0.25, 1],
-                    delay: phase === 'rising' ? 0.4 : 0,
-                  }
-            }
+            transition={buildTransition(TIDE_LAYER_3)}
           >
             <svg
               className="absolute top-0 left-0 w-full"
@@ -165,7 +141,7 @@ export function WaveSweep({ isActive, onComplete }: WaveSweepProps) {
               style={{ height: 50, transform: 'translateY(-100%)' }}
             >
               <path
-                d="M0 50 Q 480 0, 960 35 Q 1200 50, 1440 20 L1440 50 Z"
+                d="M0 50 Q 240 22, 480 40 Q 720 52, 960 32 Q 1200 18, 1440 36 L1440 50 Z"
                 fill="rgba(201,209,255,0.15)"
               />
             </svg>
